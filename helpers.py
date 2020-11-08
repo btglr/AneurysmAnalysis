@@ -9,7 +9,7 @@ def load_dataset(path):
     return ds
 
 
-def apply_denoise(img, kernel_size=3):
-    new_img = ndimage.median_filter(img.pixel_array, kernel_size)
+def apply_denoise(img, denoise_filter=ndimage.median_filter, kernel_size=3):
+    new_img = denoise_filter(img.pixel_array, kernel_size)
 
     return new_img

@@ -71,7 +71,7 @@ for patient in ds.patient_records:
             # Iterate over the stored images
             # Denoise them and store them in a new list
             for image in images:
-                new_img = apply_denoise(images[0], 3)
+                new_img = apply_denoise(images[0], kernel_size=3)
                 denoised_images.append(new_img)
 
                 # plt.imshow(new_img, cmap=plt.cm.bone)
