@@ -1,7 +1,5 @@
 import os
 
-import matplotlib.pyplot as plt
-
 from helpers import *
 
 dataset_path = "ImgTP/Ge1CaroG/MR_3DPCA"
@@ -53,41 +51,28 @@ for patient in ds.patient_records:
             paths = [[ee.value] if ee.VM == 1 else ee.value for ee in elems]
             paths = [Path(*p) for p in paths]
 
-            images = []
-            denoised_images = []
-
             # List the instance file paths
             for p in paths:
                 print(f"{'  ' * 3}IMAGE: Path={os.fspath(p)}")
 
                 img = dcmread(Path(dataset_path).joinpath(p))
-                images.append(img)
 
-                plt.xlabel("Original")
-                plt.imshow(img.pixel_array, cmap=plt.cm.bone)
-                plt.show()
-                break
+                median = apply_simple_denoise(img, kernel_size=3)
+                median_dcm = img
+                median_dcm.PixelData = median.tobytes()
 
-            # Iterate over the stored images
-            # Denoise them and store them in a new list
-            for image in images:
-                new_img = apply_simple_denoise(image, kernel_size=3)
-                denoised_images.append(new_img)
+                nlm = apply_non_local_means(img)
+                nlm_dcm = img
+                nlm_dcm.PixelData = nlm.tobytes()
 
-                plt.xlabel("Median Filter")
-                plt.imshow(new_img, cmap=plt.cm.bone)
-                plt.show()
+                bilateral = apply_bilateral_filtering(img, 4, 35, 35)
+                bilateral_dcm = img
+                bilateral_dcm.PixelData = bilateral.tobytes()
 
-            for image in images:
-                new_img = apply_non_local_means(image)
+                median_path = Path(dataset_path).joinpath("{}_median".format(p))
+                nlm_path = Path(dataset_path).joinpath("{}_nlm".format(p))
+                bilateral_path = Path(dataset_path).joinpath("{}_bilateral".format(p))
 
-                plt.xlabel("Non local means Filter")
-                plt.imshow(new_img, cmap=plt.cm.bone)
-                plt.show()
-
-            for image in images:
-                bilateral = apply_bilateral_filtering(image, 4, 35, 35)
-
-                plt.xlabel("Bilateral Filter")
-                plt.imshow(bilateral, cmap=plt.cm.bone)
-                plt.show()
+                median_dcm.save_as(median_path)
+                nlm_dcm.save_as(nlm_path)
+                bilateral_dcm.save_as(bilateral_path)
