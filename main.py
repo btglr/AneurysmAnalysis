@@ -1,10 +1,7 @@
+import matplotlib.pyplot as plt
 import os
 
-from pydicom import dcmread
-
-from helpers import load_dataset, apply_denoise
-from pathlib import Path
-import matplotlib.pyplot as plt
+from helpers import *
 
 dataset_path = "ImgTP/Ge1CaroG/MR_3DPCA"
 ds = load_dataset(dataset_path)
@@ -49,7 +46,7 @@ for patient in ds.patient_records:
             )
 
             # Get the absolute file path to each instance
-            #   Each IMAGE contains a relative file path to the root directory
+              #   Each IMAGE contains a relative file path to the root directory
             elems = [ii["ReferencedFileID"] for ii in images]
             # Make sure the relative file path is always a list of str
             paths = [[ee.value] if ee.VM == 1 else ee.value for ee in elems]
@@ -60,19 +57,31 @@ for patient in ds.patient_records:
 
             # List the instance file paths
             for p in paths:
-                # print(f"{'  ' * 3}IMAGE: Path={os.fspath(p)}")
+                print(f"{'  ' * 3}IMAGE: Path={os.fspath(p)}")
 
                 img = dcmread(Path(dataset_path).joinpath(p))
                 images.append(img)
 
-                # plt.imshow(img.pixel_array, cmap=plt.cm.bone)
-                # plt.show()
+                plt.imshow(img.pixel_array, cmap=plt.cm.bone)
+                plt.show()
+                break
 
             # Iterate over the stored images
             # Denoise them and store them in a new list
             for image in images:
-                new_img = apply_denoise(images[0], kernel_size=3)
+                new_img = apply_simple_denoise(image, kernel_size=3)
                 denoised_images.append(new_img)
 
-                # plt.imshow(new_img, cmap=plt.cm.bone)
-                # plt.show()
+                plt.imshow(new_img, cmap=plt.cm.bone)
+                plt.show()
+
+            for image in images:
+
+                new_img = apply_non_local_means(image)
+                plt.imshow(new_img, cmap=plt.cm.bone)
+                plt.show()
+
+            for image in images:
+                bilateral = apply_bilateral_filtering(image, 4, 35, 35)
+                plt.imshow(bilateral, cmap=plt.cm.bone)
+                plt.show()
