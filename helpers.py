@@ -6,6 +6,7 @@ from matplotlib.widgets import Slider
 from pydicom import dcmread
 from scipy import ndimage
 from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_bilateral
+from skimage.segmentation import random_walker
 
 is_key_held = False
 fig = None
@@ -164,3 +165,19 @@ def select_region(event):
         print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
               ('double' if event.dblclick else 'single', event.button,
                event.x, event.y, event.xdata, event.ydata))
+
+
+def apply_random_walker(image):
+    upper_bound = np.max(image)
+    img_as_float = image / upper_bound
+    img_as_float *= 2
+    img_as_float -= 1
+
+    # print(img_as_float.max(), img_as_float.min())
+    # print(image.min(), image.max())
+
+    markers = np.zeros(img_as_float.shape, dtype=np.uint)
+    markers[img_as_float < -0.90] = 1
+    markers[img_as_float > 0.90] = 2
+
+    return random_walker(img_as_float, markers, beta=10, mode='bf')
