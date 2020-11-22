@@ -83,6 +83,10 @@ def subplots_slider(images, zoom=2.0):
     nrows = nb_image_sets // 2
     ncols = int(np.ceil(nb_image_sets / 2.0))
 
+    # If we only have 2 images, add a minimum of 2 columns
+    if nrows == ncols == 1:
+        ncols = 2
+
     # print(nrows, ncols)
     # print(height, width)
 
@@ -93,7 +97,7 @@ def subplots_slider(images, zoom=2.0):
     ls = []
 
     for k in range(nb_image_sets):
-        ax = fig.add_subplot(2, 2, k + 1)
+        ax = fig.add_subplot(nrows, ncols, k + 1)
         image = ax.imshow(images[k][1][0], cmap=plt.cm.bone, aspect='auto')
         ls.append(image)
         plt.xticks([])
