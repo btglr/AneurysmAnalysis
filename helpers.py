@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib.widgets import Slider
 from pydicom import dcmread
 from scipy import ndimage
-from skimage import exposure
+from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_bilateral
 
 
 def load_dataset(path):
@@ -21,14 +21,22 @@ def apply_simple_denoise(img, denoise_filter=ndimage.median_filter, kernel_size=
     return new_img
 
 
-def apply_non_local_means(img, strength=10, kernel=7, window_search=21):
-    dcm_sample = img.pixel_array * 128
-    dcm_sample = exposure.equalize_adapthist(dcm_sample)
-    dcm_sample *= 255
+def apply_non_local_means(img, kernel=5, window_search=13):
+    # Retain original data type
+    orig_dtype = img.pixel_array.dtype
 
-    img_uint8 = np.uint8(dcm_sample)
+    # Convert from [0; max] to [0; 1] as it is required by denoise_nl_means
+    upper_bound = np.max(img.pixel_array)
+    img_as_float = img.pixel_array / upper_bound
 
-    return cv2.fastNlMeansDenoising(img_uint8, None, strength, kernel, window_search)
+    sigma_est = np.mean(estimate_sigma(img_as_float, multichannel=False))
+
+    new_img = denoise_nl_means(img_as_float, h=sigma_est, fast_mode=True, patch_size=kernel, patch_distance=window_search)
+
+    # Convert back to [0; max]
+    new_img *= upper_bound
+
+    return new_img.astype(orig_dtype)
 
 
 # d: Diameter of each pixel neighborhood.
@@ -39,13 +47,19 @@ def apply_non_local_means(img, strength=10, kernel=7, window_search=21):
 # The greater its value, the more further pixels will mix together,
 # given that their colors lie within the sigmaColor range.
 def apply_bilateral_filtering(img, d=15, sigmacolor=75, sigmacoordinate=75):
-    dcm_sample = img.pixel_array * 128
-    dcm_sample = exposure.equalize_adapthist(dcm_sample)
-    dcm_sample *= 255
+    # Retain original data type
+    orig_dtype = img.pixel_array.dtype
 
-    img_uint8 = np.uint8(dcm_sample)
+    # Convert from [0; max] to [0; 1] as it is required by denoise_nl_means
+    upper_bound = np.max(img.pixel_array)
+    img_as_float = img.pixel_array / upper_bound
 
-    return cv2.bilateralFilter(img_uint8, d, sigmacolor, sigmacoordinate)
+    new_img = denoise_bilateral(img_as_float, win_size=d, sigma_color=sigmacolor, sigma_spatial=sigmacoordinate)
+
+    # Convert back to [0; max]
+    new_img *= upper_bound
+
+    return new_img.astype(orig_dtype)
 
 
 def plot_slider(images):

@@ -1,6 +1,8 @@
+import copy
 import os
 
 from helpers import *
+import matplotlib.pyplot as plt
 
 dataset_path = "ImgTP/Ge1CaroG/MR_3DPCA"
 ds = load_dataset(dataset_path)
