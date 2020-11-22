@@ -54,8 +54,6 @@ for patient in ds.patient_records:
 
             images = []
             denoised_images = []
-            non_local__means_images = []
-            bilateral_images = []
 
             i = 0
             # List the instance file paths
