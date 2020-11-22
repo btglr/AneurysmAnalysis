@@ -1,7 +1,9 @@
 from pathlib import Path
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.widgets import Slider
 from pydicom import dcmread
 from scipy import ndimage
 from skimage import exposure
@@ -44,3 +46,16 @@ def apply_bilateral_filtering(img, d=15, sigmacolor=75, sigmacoordinate=75):
     img_uint8 = np.uint8(dcm_sample)
 
     return cv2.bilateralFilter(img_uint8, d, sigmacolor, sigmacoordinate)
+
+
+def plot_slider(images):
+    img = plt.imshow(images[0], cmap=plt.cm.bone)
+
+    def update(val):
+        img.set_data(images[int(val)])
+
+    axamp = plt.axes([0.25, .03, 0.50, 0.02])
+    samp = Slider(axamp, 'Images', 0, images.__len__() - 1, valinit=0, valstep=1, valfmt="%i")
+    samp.on_changed(update)
+
+    plt.show()

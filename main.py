@@ -1,8 +1,5 @@
 import os
 
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
-
 from helpers import *
 
 dataset_path = "ImgTP/Ge1CaroG/MR_3DPCA"
@@ -72,78 +69,26 @@ for patient in ds.patient_records:
                 if i == 24:
                     break
 
-            fig = plt.figure()
-            image = fig.add_subplot(111)
+            # Affichage des images originales
 
-            def update(val):
-                image.imshow(images[int(val)].pixel_array)
+            plot_slider([image.pixel_array for image in images])
 
-            axamp = plt.axes([0.25, .03, 0.50, 0.02])
-            samp = Slider(axamp, 'Images', 0, images.__len__() - 1, valinit=0, valstep=1, valfmt="%i")
-            samp.on_changed(update)
-            image.imshow(images[0].pixel_array)
-            plt.show()
+            # Traitement des images avec un simple filtre médian
 
             for image in images:
                 new_img = apply_simple_denoise(image, kernel_size=3)
                 denoised_images.append(new_img)
 
-            #    plt.xlabel("Median Filter")
-            #    plt.imshow(new_img, cmap=plt.cm.bone)
-            #    plt.show()
-
-            fig = plt.figure()
-            image = fig.add_subplot(111)
-            image.imshow(denoised_images[0])
-
-
-            def update(val):
-                image.imshow(denoised_images[int(val)])
-
-
-            axamp = plt.axes([0.25, .03, 0.50, 0.02])
-            samp = Slider(axamp, 'Denoised Images', 0, images.__len__() - 1, valinit=0, valstep=1, valfmt="%i")
-            samp.on_changed(update)
-            plt.show()
+            plot_slider(denoised_images)
 
             for image in images:
                 new_img = apply_non_local_means(image)
                 non_local__means_images.append(new_img)
-            #    plt.xlabel("Non local means Filter")
-            #    plt.imshow(new_img, cmap=plt.cm.bone)
-            #    plt.show()
 
-            fig = plt.figure()
-            image = fig.add_subplot(111)
-            image.imshow(non_local__means_images[0])
-
-
-            def update(val):
-                image.imshow(non_local__means_images[int(val)])
-
-
-            axamp = plt.axes([0.25, .03, 0.50, 0.02])
-            samp = Slider(axamp, 'Non local means Images', 0, images.__len__() - 1, valinit=0, valstep=1, valfmt="%i")
-            samp.on_changed(update)
-            plt.show()
+            plot_slider(non_local__means_images)
 
             for image in images:
                 bilateral = apply_bilateral_filtering(image, 4, 35, 35)
                 bilateral_images.append(bilateral)
-            #    plt.xlabel("Bilateral Filter")
-            #    plt.imshow(bilateral, cmap=plt.cm.bone)
-            #    plt.show()
 
-            fig = plt.figure()
-            image = fig.add_subplot(111)
-            image.imshow(bilateral_images[0])
-
-
-            def update(val):
-                image.imshow(bilateral_images[int(val)])
-
-
-            axamp = plt.axes([0.25, .03, 0.50, 0.02])
-            samp = Slider(axamp, 'Bilateral  Images', 0, images.__len__() - 1, valinit=0, valstep=1, valfmt="%i")
-            samp.on_changed(update)
-            plt.show()
+            plot_slider(bilateral_images)
