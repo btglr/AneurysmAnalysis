@@ -1,6 +1,8 @@
+import copy
 import os
 
 from helpers import *
+import matplotlib.pyplot as plt
 
 dataset_path = "ImgTP/Ge1CaroG/MR_3DPCA"
 ds = load_dataset(dataset_path)
@@ -57,17 +59,33 @@ for patient in ds.patient_records:
 
                 img = dcmread(Path(dataset_path).joinpath(p))
 
+                # plt.xlabel("Original")
+                # plt.imshow(img.pixel_array, cmap=plt.cm.bone)
+                # plt.show()
+
                 median = apply_simple_denoise(img, kernel_size=3)
-                median_dcm = img
+                median_dcm = copy.deepcopy(img)
                 median_dcm.PixelData = median.tobytes()
 
-                nlm = apply_non_local_means(img)
-                nlm_dcm = img
+                # plt.xlabel("Median")
+                # plt.imshow(median_dcm.pixel_array, cmap=plt.cm.bone)
+                # plt.show()
+
+                nlm = apply_non_local_means(img, kernel=5, window_search=7)
+                nlm_dcm = copy.deepcopy(img)
                 nlm_dcm.PixelData = nlm.tobytes()
 
+                # plt.xlabel("Non local means")
+                # plt.imshow(nlm_dcm.pixel_array, cmap=plt.cm.bone)
+                # plt.show()
+
                 bilateral = apply_bilateral_filtering(img, 4, 35, 35)
-                bilateral_dcm = img
+                bilateral_dcm = copy.deepcopy(img)
                 bilateral_dcm.PixelData = bilateral.tobytes()
+
+                # plt.xlabel("Bilateral")
+                # plt.imshow(bilateral_dcm.pixel_array, cmap=plt.cm.bone)
+                # plt.show()
 
                 median_path = Path(dataset_path).joinpath("{}_median".format(p))
                 nlm_path = Path(dataset_path).joinpath("{}_nlm".format(p))
