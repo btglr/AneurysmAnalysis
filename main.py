@@ -80,27 +80,5 @@ for patient in ds.patient_records:
                 path = Path(dataset_path).joinpath("{}_median".format(p))
                 median_dcm.save_as(path)
 
-            for image, p in images:
-                nlm = apply_non_local_means(image)
-                non_local__means_images.append(nlm)
-
-                nlm_dcm = copy.deepcopy(image)
-                nlm_dcm.PixelData = nlm.tobytes()
-
-                path = Path(dataset_path).joinpath("{}_nlm".format(p))
-                nlm_dcm.save_as(path)
-
-            for image, p in images:
-                bilateral = apply_bilateral_filtering(image, 4, 35, 35)
-                bilateral_images.append(bilateral)
-
-                bilateral_dcm = copy.deepcopy(image)
-                bilateral_dcm.PixelData = bilateral.tobytes()
-
-                path = Path(dataset_path).joinpath("{}_bilateral".format(p))
-                bilateral_dcm.save_as(path)
-
             subplots_slider(
-                [("Original", [image.pixel_array for image, _ in images]), ("Median Filter", denoised_images),
-                 ("Non Local Means", non_local__means_images),
-                 ("Bilateral Filter", bilateral_images)])
+                [("Original", [image.pixel_array for image, _ in images]), ("Median Filter", denoised_images)])
