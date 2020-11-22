@@ -87,6 +87,10 @@ def subplots_slider(images, zoom=2.0):
     if nrows == ncols == 1:
         ncols = 2
 
+    # If we only have 3 images, add 3 columns
+    if nrows == 1 and ncols == 2 and nb_image_sets == 3:
+        ncols = 3
+
     # print(nrows, ncols)
     # print(height, width)
 
