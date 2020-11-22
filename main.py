@@ -85,4 +85,4 @@ for patient in ds.patient_records:
 
             subplots_slider(
                 [("Original", [image.pixel_array for image, _ in images]), ("Median Filter", denoised_images),
-                 ("Threshold", threshold_images)])
+                 ("Threshold", threshold_images)], click_handler=select_region)

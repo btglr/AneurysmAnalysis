@@ -5,8 +5,11 @@ import numpy as np
 from matplotlib.widgets import Slider
 from pydicom import dcmread
 from scipy import ndimage
-from skimage.filters import threshold_otsu, threshold_mean
 from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_bilateral
+
+is_key_held = False
+fig = None
+default_title = "Hold CTRL to make a selection"
 
 
 def load_dataset(path):
@@ -77,7 +80,7 @@ def plot_slider(images, label=""):
     plt.show()
 
 
-def subplots_slider(images, zoom=2.0):
+def subplots_slider(images, zoom=2.0, click_handler=None):
     height, width = images[0][1][0].shape
     nb_image_sets = len(images)
 
@@ -95,7 +98,9 @@ def subplots_slider(images, zoom=2.0):
     # print(nrows, ncols)
     # print(height, width)
 
+    global fig
     fig = plt.figure(figsize=((width * ncols * zoom) / 100, (height * nrows * zoom) / 100), dpi=100)
+    fig.suptitle(default_title, fontsize=16)
 
     # print(fig.get_size_inches() * fig.dpi)
 
@@ -120,9 +125,42 @@ def subplots_slider(images, zoom=2.0):
 
     sframe.on_changed(update)
     # fig.subplots_adjust(wspace=0, hspace=0)
+
+    if click_handler is not None:
+        fig.canvas.mpl_connect("key_press_event", key_press_handler)
+        fig.canvas.mpl_connect("key_release_event", key_release_handler)
+        fig.canvas.mpl_connect("button_press_event", click_handler)
+
     plt.show()
 
 
 def apply_threshold(image):
     # thresh = threshold_mean(image)
     return image > 300
+
+
+def key_press_handler(event):
+    if event.key == 'control':
+        fig.suptitle("Left-click on an area to select a position", fontsize=16)
+        fig.canvas.draw()
+
+        global is_key_held
+        is_key_held = True
+
+
+def key_release_handler(event):
+    if event.key == 'control':
+        fig.suptitle(default_title, fontsize=16)
+        fig.canvas.draw()
+
+        global is_key_held
+        is_key_held = False
+
+
+def select_region(event):
+    global is_key_held
+
+    if is_key_held and event.button == 1:
+        print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+              ('double' if event.dblclick else 'single', event.button,
+               event.x, event.y, event.xdata, event.ydata))
