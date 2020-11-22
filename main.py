@@ -90,7 +90,12 @@ for patient in ds.patient_records:
                 random_walker_images.append(random_walker)
                 flood_fill_images.append(fill)
 
-            subplots_slider(
-                [("Original", [image.pixel_array for image, _ in images]), ("Median Filter", denoised_images),
-                 ("Threshold", threshold_images), ("Random Walker", random_walker_images),
-                 ("Flood Fill", flood_fill_images)], click_handler=select_region)
+            all_images = []
+
+            all_images.append(("Original", [image.pixel_array for image, _ in images]))
+            all_images.append(("Median Filter", denoised_images))
+            all_images.append(("Threshold", threshold_images))
+            all_images.append(("Random Walker", random_walker_images))
+            all_images.append(("Flood Fill", flood_fill_images))
+
+            subplots_slider(all_images, click_handler=select_region)
