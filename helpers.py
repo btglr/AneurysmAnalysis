@@ -62,7 +62,7 @@ def apply_bilateral_filtering(img, d=15, sigmacolor=75, sigmacoordinate=75):
     return new_img.astype(orig_dtype)
 
 
-def plot_slider(images):
+def plot_slider(images, label=""):
     img = plt.imshow(images[0], cmap=plt.cm.bone)
 
     def update(val):
@@ -72,4 +72,5 @@ def plot_slider(images):
     samp = Slider(axamp, 'Images', 0, images.__len__() - 1, valinit=0, valstep=1, valfmt="%i")
     samp.on_changed(update)
 
+    plt.xlabel(label)
     plt.show()
