@@ -5,6 +5,7 @@ import numpy as np
 from matplotlib.widgets import Slider
 from pydicom import dcmread
 from scipy import ndimage
+from skimage.filters import threshold_otsu, threshold_mean
 from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_bilateral
 
 
@@ -102,7 +103,7 @@ def subplots_slider(images, zoom=2.0):
 
     for k in range(nb_image_sets):
         ax = fig.add_subplot(nrows, ncols, k + 1)
-        image = ax.imshow(images[k][1][0], cmap=plt.cm.bone, aspect='auto')
+        image = ax.imshow(images[k][1][0], cmap=plt.cm.gray, aspect='auto')
         ls.append(image)
         plt.xticks([])
         plt.yticks([])
@@ -120,3 +121,8 @@ def subplots_slider(images, zoom=2.0):
     sframe.on_changed(update)
     # fig.subplots_adjust(wspace=0, hspace=0)
     plt.show()
+
+
+def apply_threshold(image):
+    # thresh = threshold_mean(image)
+    return image > 300

@@ -54,6 +54,7 @@ for patient in ds.patient_records:
 
             images = []
             denoised_images = []
+            threshold_images = []
 
             i = 0
             # List the instance file paths
@@ -78,5 +79,10 @@ for patient in ds.patient_records:
                 path = Path(dataset_path).joinpath("{}_median".format(p))
                 median_dcm.save_as(path)
 
+            for median_image in denoised_images:
+                thresh = apply_threshold(median_image)
+                threshold_images.append(thresh)
+
             subplots_slider(
-                [("Original", [image.pixel_array for image, _ in images]), ("Median Filter", denoised_images)])
+                [("Original", [image.pixel_array for image, _ in images]), ("Median Filter", denoised_images),
+                 ("Threshold", threshold_images)])
