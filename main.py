@@ -1,8 +1,6 @@
-import copy
 import os
 
 from helpers import *
-import matplotlib.pyplot as plt
 
 dataset_path = "ImgTP/Ge1CaroG/MR_3DPCA"
 ds = load_dataset(dataset_path)
@@ -70,45 +68,38 @@ for patient in ds.patient_records:
                 if i == 24:
                     break
 
-            # Affichage des images originales
-
-            plot_slider([image.pixel_array for image, _ in images], label="Original")
-
-            # Traitement des images avec un simple filtre médian
-
             for image, p in images:
                 median = apply_simple_denoise(image, kernel_size=3)
 
                 denoised_images.append(median)
 
-                median_dcm = copy.deepcopy(image)
-                median_dcm.PixelData = median.tobytes()
-
-                path = Path(dataset_path).joinpath("{}_median".format(p))
-                median_dcm.save_as(path)
-
-            plot_slider(denoised_images, label="Median Filter")
+                # median_dcm = copy.deepcopy(image)
+                # median_dcm.PixelData = median.tobytes()
+                #
+                # path = Path(dataset_path).joinpath("{}_median".format(p))
+                # median_dcm.save_as(path)
 
             for image, p in images:
                 nlm = apply_non_local_means(image)
                 non_local__means_images.append(nlm)
 
-                nlm_dcm = copy.deepcopy(image)
-                nlm_dcm.PixelData = nlm.tobytes()
-
-                path = Path(dataset_path).joinpath("{}_nlm".format(p))
-                nlm_dcm.save_as(path)
-
-            plot_slider(non_local__means_images, label="Non Local Means")
+                # nlm_dcm = copy.deepcopy(image)
+                # nlm_dcm.PixelData = nlm.tobytes()
+                #
+                # path = Path(dataset_path).joinpath("{}_nlm".format(p))
+                # nlm_dcm.save_as(path)
 
             for image, p in images:
                 bilateral = apply_bilateral_filtering(image, 4, 35, 35)
                 bilateral_images.append(bilateral)
 
-                bilateral_dcm = copy.deepcopy(image)
-                bilateral_dcm.PixelData = bilateral.tobytes()
+                # bilateral_dcm = copy.deepcopy(image)
+                # bilateral_dcm.PixelData = bilateral.tobytes()
+                #
+                # path = Path(dataset_path).joinpath("{}_bilateral".format(p))
+                # bilateral_dcm.save_as(path)
 
-                path = Path(dataset_path).joinpath("{}_bilateral".format(p))
-                bilateral_dcm.save_as(path)
-
-            plot_slider(bilateral_images, label="Bilateral Filter")
+            subplots_slider(
+                [("Original", [image.pixel_array for image, _ in images]), ("Median Filter", denoised_images),
+                 ("Non Local Means", non_local__means_images),
+                 ("Bilateral Filter", bilateral_images)])

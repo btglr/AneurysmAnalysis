@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.widgets import Slider
@@ -31,7 +30,8 @@ def apply_non_local_means(img, kernel=5, window_search=13):
 
     sigma_est = np.mean(estimate_sigma(img_as_float, multichannel=False))
 
-    new_img = denoise_nl_means(img_as_float, h=sigma_est, fast_mode=True, patch_size=kernel, patch_distance=window_search)
+    new_img = denoise_nl_means(img_as_float, h=sigma_est, fast_mode=True, patch_size=kernel,
+                               patch_distance=window_search)
 
     # Convert back to [0; max]
     new_img *= upper_bound
@@ -73,4 +73,42 @@ def plot_slider(images, label=""):
     samp.on_changed(update)
 
     plt.xlabel(label)
+    plt.show()
+
+
+def subplots_slider(images, zoom=2.0):
+    height, width = images[0][1][0].shape
+    nb_image_sets = len(images)
+
+    nrows = nb_image_sets // 2
+    ncols = int(np.ceil(nb_image_sets / 2.0))
+
+    # print(nrows, ncols)
+    # print(height, width)
+
+    fig = plt.figure(figsize=((width * ncols * zoom) / 100, (height * nrows * zoom) / 100), dpi=100)
+
+    # print(fig.get_size_inches() * fig.dpi)
+
+    ls = []
+
+    for k in range(nb_image_sets):
+        ax = fig.add_subplot(2, 2, k + 1)
+        image = ax.imshow(images[k][1][0], cmap=plt.cm.bone, aspect='auto')
+        ls.append(image)
+        plt.xticks([])
+        plt.yticks([])
+        plt.xlabel(images[k][0])
+
+    axamp = plt.axes([0.25, .03, 0.50, 0.02])
+    sframe = Slider(axamp, 'Image', 0, len(images[0][1]) - 1, valinit=0, valstep=1, valfmt="%i")
+
+    def update(val):
+        val = int(val)
+
+        for k, l in enumerate(ls):
+            l.set_data(images[k][1][val])
+
+    sframe.on_changed(update)
+    # fig.subplots_adjust(wspace=0, hspace=0)
     plt.show()
