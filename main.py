@@ -65,7 +65,7 @@ for patient in ds.patient_records:
                 images.append((img, p))
 
                 i += 1
-                if i == 24:
+                if i == 48:
                     break
 
             for image, p in images:
