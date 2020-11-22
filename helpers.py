@@ -5,6 +5,7 @@ import numpy as np
 from matplotlib.widgets import Slider
 from pydicom import dcmread
 from scipy import ndimage
+from skimage.morphology import flood_fill
 from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_bilateral
 from skimage.segmentation import random_walker
 
@@ -181,3 +182,14 @@ def apply_random_walker(image):
     markers[img_as_float > 0.90] = 2
 
     return random_walker(img_as_float, markers, beta=10, mode='bf')
+
+
+def apply_flood_fill(image, starting_coordinates):
+    upper_bound = np.max(image)
+    img_as_float = image / upper_bound
+    fill = flood_fill(img_as_float, starting_coordinates, 1.0, tolerance=0.2)
+
+    # Zero all values that haven't been replaced by the flood fill, effectively turning the image into a binary image
+    fill[fill < 1.0] = 0
+
+    return fill

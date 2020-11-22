@@ -56,6 +56,7 @@ for patient in ds.patient_records:
             denoised_images = []
             threshold_images = []
             random_walker_images = []
+            flood_fill_images = []
 
             i = 0
             # List the instance file paths
@@ -83,11 +84,13 @@ for patient in ds.patient_records:
             for median_image in denoised_images:
                 thresh = apply_threshold(median_image)
                 random_walker = apply_random_walker(median_image)
+                fill = apply_flood_fill(median_image, (76, 69))
 
                 threshold_images.append(thresh)
-
                 random_walker_images.append(random_walker)
+                flood_fill_images.append(fill)
 
             subplots_slider(
                 [("Original", [image.pixel_array for image, _ in images]), ("Median Filter", denoised_images),
-                 ("Threshold", threshold_images), ("Random Walker", random_walker_images)], click_handler=select_region)
+                 ("Threshold", threshold_images), ("Random Walker", random_walker_images),
+                 ("Flood Fill", flood_fill_images)], click_handler=select_region)
