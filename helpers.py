@@ -194,6 +194,8 @@ def select_region(event):
 
                 l.set_data(images_drawn[k][1][current_image_slider])
 
+        fig.canvas.draw()
+
 
 def apply_random_walker(image):
     upper_bound = np.max(image)
