@@ -12,6 +12,10 @@ from skimage.segmentation import random_walker
 is_key_held = False
 fig = None
 default_title = "Hold CTRL to make a selection"
+ls = []
+images_drawn = []
+current_image_slider = 0
+median_images = None
 
 
 def load_dataset(path):
@@ -83,8 +87,10 @@ def plot_slider(images, label=""):
 
 
 def subplots_slider(images, zoom=2.0, click_handler=None):
-    height, width = images[0][1][0].shape
-    nb_image_sets = len(images)
+    global images_drawn
+    images_drawn = images
+    height, width = images_drawn[0][1][0].shape
+    nb_image_sets = len(images_drawn)
 
     nrows = int(np.ceil(np.sqrt(nb_image_sets)))
     ncols = nb_image_sets // nrows
@@ -102,24 +108,30 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
 
     # print(fig.get_size_inches() * fig.dpi)
 
-    ls = []
+    global ls
 
     for k in range(nb_image_sets):
+        if images_drawn[k][2]['type'] == 'median_filter':
+            global median_images
+            median_images = images_drawn[k][1]
+
         ax = fig.add_subplot(nrows, ncols, k + 1)
-        image = ax.imshow(images[k][1][0], cmap=plt.cm.gray, aspect='auto')
+        image = ax.imshow(images_drawn[k][1][0], cmap=plt.cm.gray, aspect='auto')
         ls.append(image)
         plt.xticks([])
         plt.yticks([])
-        plt.xlabel(images[k][0])
+        plt.xlabel(images_drawn[k][0])
 
     axamp = plt.axes([0.25, .03, 0.50, 0.02])
-    sframe = Slider(axamp, 'Image', 0, len(images[0][1]) - 1, valinit=0, valstep=1, valfmt="%i")
+    sframe = Slider(axamp, 'Image', 0, len(images_drawn[0][1]) - 1, valinit=0, valstep=1, valfmt="%i")
 
     def update(val):
+        global current_image_slider
+        current_image_slider = val
         val = int(val)
 
         for k, l in enumerate(ls):
-            l.set_data(images[k][1][val])
+            l.set_data(images_drawn[k][1][val])
 
     sframe.on_changed(update)
     # fig.subplots_adjust(wspace=0, hspace=0)
@@ -157,11 +169,30 @@ def key_release_handler(event):
 
 def select_region(event):
     global is_key_held
+    global ls
 
     if is_key_held and event.button == 1:
-        print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
-              ('double' if event.dblclick else 'single', event.button,
-               event.x, event.y, event.xdata, event.ydata))
+        # print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+        #       ('double' if event.dblclick else 'single', event.button,
+        #        event.x, event.y, event.xdata, event.ydata))
+
+        x = int(event.xdata)
+        y = int(event.ydata)
+
+        print("Apply flood fill at coordinates: ({}, {})".format(x, y))
+
+        for k, l in enumerate(ls):
+            params = images_drawn[k][2]
+
+            if params['type'] == 'flood_fill':
+                tol = params['tolerance']
+
+                for i in range(len(median_images)):
+                    images_drawn[k][1][i] = apply_flood_fill(median_images[i],
+                                                             (x, y),
+                                                             tolerance=tol)
+
+                l.set_data(images_drawn[k][1][current_image_slider])
 
 
 def apply_random_walker(image):

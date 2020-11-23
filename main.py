@@ -97,12 +97,13 @@ for patient in ds.patient_records:
 
             all_images = []
 
-            all_images.append(("Original", [image.pixel_array for image, _ in images]))
-            all_images.append(("Median Filter", denoised_images))
-            all_images.append(("Threshold", threshold_images))
-            all_images.append(("Random Walker", random_walker_images))
+            all_images.append(('Original', [image.pixel_array for image, _ in images], {'type': 'original'}))
+            all_images.append(('Median Filter', denoised_images, {'type': 'median_filter'}))
+            all_images.append(('Threshold', threshold_images, {'type': 'threshold'}))
+            all_images.append(('Random Walker', random_walker_images, {'type': 'random_walker'}))
 
             for tol in fills:
-                all_images.append(("Flood Fill Tol {:.2f}".format(tol), fills[tol]))
+                all_images.append(
+                    ('Flood Fill Tol {:.2f}'.format(tol), fills[tol], {'type': 'flood_fill', 'tolerance': tol}))
 
             subplots_slider(all_images, click_handler=select_region, zoom=1)
