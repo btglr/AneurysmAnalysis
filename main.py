@@ -1,5 +1,6 @@
 import copy
 import os
+import globals
 
 from helpers import *
 
@@ -101,6 +102,8 @@ for patient in ds.patient_records:
             all_images.append(('Median Filter', denoised_images, {'type': 'median_filter'}))
             all_images.append(('Threshold', threshold_images, {'type': 'threshold'}))
             all_images.append(('Random Walker', random_walker_images, {'type': 'random_walker'}))
+
+            globals.median_images = denoised_images
 
             for tol in fills:
                 all_images.append(

@@ -100,9 +100,6 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
     # print(fig.get_size_inches() * fig.dpi)
 
     for k in range(nb_image_sets):
-        if globals.images_drawn[k][2]['type'] == 'median_filter':
-            globals.median_images = globals.images_drawn[k][1]
-
         ax = globals.fig.add_subplot(nrows, ncols, k + 1)
         image = ax.imshow(globals.images_drawn[k][1][0], cmap=plt.cm.gray, aspect='auto')
         globals.ls.append(image)
