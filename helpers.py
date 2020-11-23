@@ -127,8 +127,8 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
 
     def update(val):
         global current_image_slider
-        current_image_slider = val
         val = int(val)
+        current_image_slider = val
 
         for k, l in enumerate(ls):
             l.set_data(images_drawn[k][1][val])
