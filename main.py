@@ -84,7 +84,7 @@ for patient in ds.patient_records:
                 thresh = apply_threshold(median_image)
                 random_walker = apply_random_walker(median_image)
 
-                for tol in np.linspace(0.1, 0.7, 21):
+                for tol in np.linspace(0.2, 0.4, 12):
                     str_tol = "{:.2f}".format(tol)
 
                     if str_tol not in fills:
