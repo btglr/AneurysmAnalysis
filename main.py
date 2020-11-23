@@ -110,3 +110,14 @@ for patient in ds.patient_records:
                     ('Flood Fill Tol {}'.format(tol), fills[tol], {'type': 'flood_fill', 'tolerance': tol}))
 
             subplots_slider(all_images, click_handler=select_region, zoom=1)
+
+            image_number = 16
+            selected_tol = fills['0.31']
+            selected_gray = denoised_images[image_number]
+            selected_fill = selected_tol[image_number]
+
+            anevrism = selected_gray * selected_fill
+
+            plt.figure()
+            plt.imshow(anevrism, cmap=plt.cm.gray)
+            plt.show()
