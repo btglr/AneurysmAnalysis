@@ -9,10 +9,10 @@ ds = load_dataset(dataset_path)
 
 # Iterate through the PATIENT records
 for patient in ds.patient_records:
-    print(
-        f"PATIENT: PatientID={patient.PatientID}, "
-        f"PatientName={patient.PatientName}"
-    )
+    # print(
+    #     f"PATIENT: PatientID={patient.PatientID}, "
+    #     f"PatientName={patient.PatientName}"
+    # )
 
     # Find all the STUDY records for the patient
     studies = [
@@ -20,10 +20,10 @@ for patient in ds.patient_records:
     ]
     for study in studies:
         descr = study.StudyDescription or "(no value available)"
-        print(
-            f"{'  ' * 1}STUDY: StudyID={study.StudyID}, "
-            f"StudyDate={study.StudyDate}, StudyDescription={descr}"
-        )
+        # print(
+        #     f"{'  ' * 1}STUDY: StudyID={study.StudyID}, "
+        #     f"StudyDate={study.StudyDate}, StudyDescription={descr}"
+        # )
 
         # Find all the SERIES records in the study
         all_series = [
@@ -40,11 +40,11 @@ for patient in ds.patient_records:
             descr = getattr(
                 series, "SeriesDescription", "(no value available)"
             )
-            print(
-                f"{'  ' * 2}SERIES: SeriesNumber={series.SeriesNumber}, "
-                f"Modality={series.Modality}, SeriesDescription={descr} - "
-                f"{len(images)} SOP Instance{plural}"
-            )
+            # print(
+            #     f"{'  ' * 2}SERIES: SeriesNumber={series.SeriesNumber}, "
+            #     f"Modality={series.Modality}, SeriesDescription={descr} - "
+            #     f"{len(images)} SOP Instance{plural}"
+            # )
 
             # Get the absolute file path to each instance
             #   Each IMAGE contains a relative file path to the root directory
@@ -62,7 +62,7 @@ for patient in ds.patient_records:
             i = 0
             # List the instance file paths
             for p in paths:
-                print(f"{'  ' * 3}IMAGE: Path={os.fspath(p)}")
+                # print(f"{'  ' * 3}IMAGE: Path={os.fspath(p)}")
 
                 img = dcmread(Path(dataset_path).joinpath(p))
                 images.append((img, p))
