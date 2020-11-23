@@ -107,7 +107,7 @@ for patient in ds.patient_records:
 
             for tol in fills:
                 all_images.append(
-                    ('Flood Fill Tol {}'.format(tol), fills[tol], {'type': 'flood_fill', 'tolerance': tol}))
+                    ('Flood Fill Tol {}'.format(tol), fills[tol], {'type': 'flood_fill', 'tolerance': float(tol)}))
 
             subplots_slider(all_images, click_handler=select_region, zoom=1)
 
