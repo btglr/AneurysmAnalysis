@@ -1,6 +1,4 @@
 import copy
-import os
-import globals
 
 from helpers import *
 
@@ -87,11 +85,13 @@ for patient in ds.patient_records:
                 random_walker = apply_random_walker(median_image)
 
                 for tol in np.linspace(0.1, 0.7, 21):
-                    if tol not in fills:
-                        fills[tol] = []
+                    str_tol = "{:.2f}".format(tol)
+
+                    if str_tol not in fills:
+                        fills[str_tol] = []
 
                     fill = apply_flood_fill(median_image, (76, 69), tol)
-                    fills[tol].append(fill)
+                    fills[str_tol].append(fill)
 
                 threshold_images.append(thresh)
                 random_walker_images.append(random_walker)
@@ -107,6 +107,6 @@ for patient in ds.patient_records:
 
             for tol in fills:
                 all_images.append(
-                    ('Flood Fill Tol {:.2f}'.format(tol), fills[tol], {'type': 'flood_fill', 'tolerance': tol}))
+                    ('Flood Fill Tol {}'.format(tol), fills[tol], {'type': 'flood_fill', 'tolerance': tol}))
 
             subplots_slider(all_images, click_handler=select_region, zoom=1)
