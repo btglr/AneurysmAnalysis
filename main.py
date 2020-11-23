@@ -56,7 +56,7 @@ for patient in ds.patient_records:
             denoised_images = []
             threshold_images = []
             random_walker_images = []
-            flood_fill_images = []
+            fills = {}
 
             i = 0
             # List the instance file paths
@@ -84,11 +84,16 @@ for patient in ds.patient_records:
             for median_image in denoised_images:
                 thresh = apply_threshold(median_image)
                 random_walker = apply_random_walker(median_image)
-                fill = apply_flood_fill(median_image, (76, 69))
+
+                for tol in np.linspace(0.1, 0.7, 21):
+                    if tol not in fills:
+                        fills[tol] = []
+
+                    fill = apply_flood_fill(median_image, (76, 69), tol)
+                    fills[tol].append(fill)
 
                 threshold_images.append(thresh)
                 random_walker_images.append(random_walker)
-                flood_fill_images.append(fill)
 
             all_images = []
 
@@ -96,6 +101,8 @@ for patient in ds.patient_records:
             all_images.append(("Median Filter", denoised_images))
             all_images.append(("Threshold", threshold_images))
             all_images.append(("Random Walker", random_walker_images))
-            all_images.append(("Flood Fill", flood_fill_images))
 
-            subplots_slider(all_images, click_handler=select_region)
+            for tol in fills:
+                all_images.append(("Flood Fill Tol {:.2f}".format(tol), fills[tol]))
+
+            subplots_slider(all_images, click_handler=select_region, zoom=1)
