@@ -111,11 +111,16 @@ for patient in ds.patient_records:
 
             subplots_slider(all_images, click_handler=select_region, zoom=1)
 
+            # Select image 16
             image_number = 16
+            # Select image set with tolerance 0.31
             selected_tol = fills['0.31']
+
+            # Select the image number from each set
             selected_gray = denoised_images[image_number]
             selected_fill = selected_tol[image_number]
 
+            # Multiply the gray image with the mask
             anevrism = selected_gray * selected_fill
 
             plt.figure()
