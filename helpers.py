@@ -180,10 +180,10 @@ def apply_random_walker(image):
     return random_walker(img_as_float, markers, beta=10, mode='bf')
 
 
-def apply_flood_fill(image, starting_coordinates):
+def apply_flood_fill(image, starting_coordinates, tolerance):
     upper_bound = np.max(image)
     img_as_float = image / upper_bound
-    fill = flood_fill(img_as_float, starting_coordinates, 1.0, tolerance=0.2)
+    fill = flood_fill(img_as_float, starting_coordinates, 1.0, tolerance=tolerance)
 
     # Zero all values that haven't been replaced by the flood fill, effectively turning the image into a binary image
     fill[fill < 1.0] = 0
