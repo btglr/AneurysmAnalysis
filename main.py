@@ -122,6 +122,9 @@ for patient in ds.patient_records:
 
             # Multiply the gray image with the mask
             anevrism = selected_gray * selected_fill
+            average_gray = np.nanmean(nan_if(anevrism, 0))
+
+            print(average_gray)
 
             plt.figure()
             plt.imshow(anevrism, cmap=plt.cm.gray)

@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import globals
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.widgets import Slider
@@ -9,6 +8,8 @@ from scipy import ndimage
 from skimage.morphology import flood_fill
 from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_bilateral
 from skimage.segmentation import random_walker
+
+import globals
 
 
 def load_dataset(path):
@@ -168,8 +169,8 @@ def select_region(event):
 
                 for i in range(len(globals.median_images)):
                     globals.images_drawn[k][1][i] = apply_flood_fill(globals.median_images[i],
-                                                             (x, y),
-                                                             tolerance=tol)
+                                                                     (x, y),
+                                                                     tolerance=tol)
 
                 l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
 
@@ -201,3 +202,7 @@ def apply_flood_fill(image, starting_coordinates, tolerance):
     fill[fill < 1.0] = 0
 
     return fill
+
+
+def nan_if(arr, value):
+    return np.where(arr == value, np.nan, arr)
