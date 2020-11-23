@@ -115,6 +115,7 @@ for patient in ds.patient_records:
             image_number = 16
             # Select image set with tolerance 0.31
             selected_tol = fills['0.31']
+            new_tol = selected_tol
 
             # Select the image number from each set
             selected_gray = denoised_images[image_number]
@@ -122,10 +123,32 @@ for patient in ds.patient_records:
 
             # Multiply the gray image with the mask
             anevrism = selected_gray * selected_fill
-            average_gray = np.nanmean(nan_if(anevrism, 0))
 
-            print(average_gray)
+            # Get the average value of the result
+            average_gray = int(np.nanmean(nan_if(anevrism, 0)))
 
-            plt.figure()
-            plt.imshow(anevrism, cmap=plt.cm.gray)
-            plt.show()
+            print("Average gray: {}".format(average_gray))
+
+            for image_number in range(17, 48):
+                # Apply the mask to the next image
+                selected_gray = denoised_images[image_number]
+                anevrism = selected_gray * selected_fill
+
+                # Find a new starting point
+                close_values = np.where(np.isclose(anevrism, average_gray, atol=20))
+
+                # Combine the two 1D arrays so we get an array of (x, y) coordinates
+                combined = np.column_stack(close_values)
+
+                # Take a random starting point
+                index = np.random.randint(0, combined.shape[0])
+
+                new_coordinates = (combined[index][0], combined[index][1])
+                print("New starting coordinates: ({}, {})".format(combined[index][0], combined[index][1]))
+
+                new_tol[image_number] = apply_flood_fill(selected_gray, new_coordinates, 0.31)
+                selected_fill = new_tol[image_number]
+                anevrism = selected_gray * selected_fill
+                average_gray = int(np.nanmean(nan_if(anevrism, 0)))
+
+            plot_slider(new_tol, "Dynamic")
