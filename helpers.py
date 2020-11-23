@@ -89,7 +89,7 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
     nrows = int(np.ceil(np.sqrt(nb_image_sets)))
     ncols = nb_image_sets // nrows
 
-    # If we only have 3 images, add 3 columns
+    # If we only have 3 images, add 2 columns
     if nrows == 2 and ncols == 1 and nb_image_sets == 3:
         ncols = 2
 
