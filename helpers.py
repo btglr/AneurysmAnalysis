@@ -85,12 +85,8 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
     height, width = globals.images_drawn[0][1][0].shape
     nb_image_sets = len(globals.images_drawn)
 
-    nrows = int(np.ceil(np.sqrt(nb_image_sets)))
-    ncols = nb_image_sets // nrows
-
-    # If we only have 3 images, add 2 columns
-    if nrows == 2 and ncols == 1 and nb_image_sets == 3:
-        ncols = 2
+    ncols = nb_image_sets if nb_image_sets <= 6 else 6
+    nrows = int(np.ceil(nb_image_sets / float(ncols)))
 
     # print(nrows, ncols)
     # print(height, width)
