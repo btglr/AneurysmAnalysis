@@ -257,8 +257,6 @@ def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood
 def evolutive_flood_fill(images, flood_fill_tolerance, fills):
     # Select image
     image_number = globals.current_image_slider
-    # Set flood fill tolerance
-    flood_fill_tolerance = 0.31
     # Select image set with the given tolerance
     selected_tol = fills[str(flood_fill_tolerance)]
 
