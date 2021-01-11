@@ -210,6 +210,7 @@ def nan_if(arr, value):
 def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood_fill_tolerance):
     step = 1
     new_tol = [None] * len(images)
+    masked = [None] * len(images)
 
     selected_fill = starting_image
     average_gray = starting_average_gray
@@ -249,9 +250,10 @@ def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood
         new_tol[image_number] = apply_flood_fill(selected_gray, new_coordinates, flood_fill_tolerance)
         selected_fill = new_tol[image_number]
         selected_masked = selected_gray * selected_fill
+        masked[image_number] = selected_masked
         average_gray = int(np.nanmean(nan_if(selected_masked, 0)))
 
-    return new_tol
+    return new_tol, masked
 
 
 def evolutive_flood_fill(images, flood_fill_tolerance, fills):
@@ -272,11 +274,12 @@ def evolutive_flood_fill(images, flood_fill_tolerance, fills):
 
     print("Average gray: {}".format(average_gray))
 
-    new_tol_upper = evolve_fill(images, image_number, len(images), selected_fill,
-                                average_gray, flood_fill_tolerance=flood_fill_tolerance)
-    new_tol_lower = evolve_fill(images, image_number, 0, selected_fill, average_gray,
-                                flood_fill_tolerance=flood_fill_tolerance)
+    new_tol_upper, masked_upper = evolve_fill(images, image_number, len(images), selected_fill,
+                                              average_gray, flood_fill_tolerance=flood_fill_tolerance)
+    new_tol_lower, masked_lower = evolve_fill(images, image_number, 0, selected_fill, average_gray,
+                                              flood_fill_tolerance=flood_fill_tolerance)
 
     new_tol = new_tol_lower[0:image_number + 1] + new_tol_upper[image_number + 1:len(images)]
+    masked = masked_lower[0:image_number + 1] + masked_upper[image_number + 1:len(images)]
 
-    return new_tol
+    return new_tol, masked

@@ -111,6 +111,6 @@ for patient in ds.patient_records:
 
             subplots_slider(all_images, click_handler=select_region, zoom=1)
 
-            new_tol = evolutive_flood_fill(denoised_images, 0.31, fills)
+            new_tol, masked = evolutive_flood_fill(denoised_images, 0.31, fills)
 
             plot_slider(new_tol, "Dynamic")
