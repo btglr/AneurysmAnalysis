@@ -67,7 +67,7 @@ def apply_bilateral_filtering(img, d=15, sigmacolor=75, sigmacoordinate=75):
 
 
 def plot_slider(images, label=""):
-    img = plt.imshow(images[0], cmap=plt.cm.bone)
+    img = plt.imshow(images[0], cmap=plt.cm.gray)
 
     def update(val):
         img.set_data(images[int(val)])
