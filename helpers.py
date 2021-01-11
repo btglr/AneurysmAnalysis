@@ -208,3 +208,77 @@ def apply_flood_fill(image, starting_coordinates, tolerance):
 
 def nan_if(arr, value):
     return np.where(arr == value, np.nan, arr)
+
+
+def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood_fill_tolerance):
+    step = 1
+    new_tol = [None] * len(images)
+
+    selected_fill = starting_image
+    average_gray = starting_average_gray
+
+    if begin > end:
+        step = -1
+        end -= 1
+    else:
+        begin += 1
+
+    # print(begin, end, step)
+
+    for image_number in range(begin, end, step):
+        print(image_number)
+        # Apply the mask to the image
+        selected_gray = images[image_number]
+        selected_masked = selected_gray * selected_fill
+
+        # Find a new starting point
+        close_values = np.where(np.isclose(selected_masked, average_gray, atol=20))
+
+        # Combine the two 1D arrays so we get an array of (y, x) coordinates
+        combined = np.column_stack(close_values)
+
+        # Take a random starting point
+        index = np.random.randint(0, combined.shape[0])
+
+        new_coordinates = (combined[index][0], combined[index][1])
+
+        print("New starting coordinates: ({}, {}) | Value: {}".format(combined[index][1], combined[index][0],
+                                                                      selected_gray[
+                                                                          combined[index][0], combined[index][1]]))
+
+        new_tol[image_number] = apply_flood_fill(selected_gray, new_coordinates, flood_fill_tolerance)
+        selected_fill = new_tol[image_number]
+        selected_masked = selected_gray * selected_fill
+        average_gray = int(np.nanmean(nan_if(selected_masked, 0)))
+
+    return new_tol
+
+
+def evolutive_flood_fill(images, flood_fill_tolerance, fills):
+    # Select image
+    image_number = globals.current_image_slider
+    # Set flood fill tolerance
+    flood_fill_tolerance = 0.31
+    # Select image set with the given tolerance
+    selected_tol = fills[str(flood_fill_tolerance)]
+
+    # Select the image number from each set
+    selected_gray = images[image_number]
+    selected_fill = selected_tol[image_number]
+
+    # Multiply the gray image with the mask
+    anevrism = selected_gray * selected_fill
+
+    # Get the average value of the result
+    average_gray = int(np.nanmean(nan_if(anevrism, 0)))
+
+    print("Average gray: {}".format(average_gray))
+
+    new_tol_upper = evolve_fill(images, image_number, len(images), selected_fill,
+                                average_gray, flood_fill_tolerance=flood_fill_tolerance)
+    new_tol_lower = evolve_fill(images, image_number, 0, selected_fill, average_gray,
+                                flood_fill_tolerance=flood_fill_tolerance)
+
+    new_tol = new_tol_lower[0:image_number + 1] + new_tol_upper[image_number + 1:len(images)]
+
+    return new_tol
