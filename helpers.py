@@ -82,6 +82,7 @@ def plot_slider(images, label=""):
 
 def subplots_slider(images, zoom=2.0, click_handler=None):
     globals.images_drawn = images
+    globals.ls = []
     height, width = globals.images_drawn[0][1][0].shape
     nb_image_sets = len(globals.images_drawn)
 
