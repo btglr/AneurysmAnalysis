@@ -168,8 +168,10 @@ def select_region(event):
                 tol = params['tolerance']
 
                 for i in range(len(globals.median_images)):
+                    # Coordinates are height, width instead of width, height in numpy
+                    # We therefore apply the flood fill to the coordinates (y, x)
                     globals.images_drawn[k][1][i] = apply_flood_fill(globals.median_images[i],
-                                                                     (x, y),
+                                                                     (y, x),
                                                                      tolerance=tol)
 
                 l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
