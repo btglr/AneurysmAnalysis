@@ -226,13 +226,16 @@ def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood
     # print(begin, end, step)
 
     for image_number in range(begin, end, step):
-        print(image_number)
+        print("Image {}".format(image_number))
         # Apply the mask to the image
         selected_gray = images[image_number]
         selected_masked = selected_gray * selected_fill
+        atol = 20
+
+        print("Searching for grays within ± {} of the average value of {}".format(atol, average_gray))
 
         # Find a new starting point
-        close_values = np.where(np.isclose(selected_masked, average_gray, atol=20))
+        close_values = np.where(np.isclose(selected_masked, average_gray, atol=atol))
 
         # Combine the two 1D arrays so we get an array of (y, x) coordinates
         combined = np.column_stack(close_values)
