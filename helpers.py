@@ -272,10 +272,10 @@ def evolutive_flood_fill(images, flood_fill_tolerance, fills):
     selected_fill = selected_tol[image_number]
 
     # Multiply the gray image with the mask
-    anevrism = selected_gray * selected_fill
+    selected_masked = selected_gray * selected_fill
 
     # Get the average value of the result
-    average_gray = int(np.nanmean(nan_if(anevrism, 0)))
+    average_gray = int(np.nanmean(nan_if(selected_masked, 0)))
 
     print("Average gray: {}".format(average_gray))
 
