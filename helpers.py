@@ -99,7 +99,14 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
 
     for k in range(nb_image_sets):
         ax = globals.fig.add_subplot(nrows, ncols, k + 1)
-        image = ax.imshow(globals.images_drawn[k][1][0], cmap=plt.cm.gray, aspect='auto')
+        vmin = globals.images_drawn[k][1][0].min()
+        vmax = globals.images_drawn[k][1][0].max()
+
+        if vmin == vmax:
+            vmin = 0
+            vmax = 1
+
+        image = ax.imshow(globals.images_drawn[k][1][0], cmap=plt.cm.gray, aspect='auto', vmin=vmin, vmax=vmax)
         globals.ls.append(image)
         plt.xticks([])
         plt.yticks([])
