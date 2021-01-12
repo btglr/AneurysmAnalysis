@@ -279,14 +279,23 @@ def evolutive_flood_fill(images, flood_fill_tolerance, starting_coordinates):
 
     print("Average gray: {}".format(average_gray))
 
-    # TODO: handle current image slider being 0 or len(images)
+    if image_number == 0:
+        new_tol, masked = evolve_fill(images, 1, len(images), mask_starting_image,
+                                      average_gray, flood_fill_tolerance=flood_fill_tolerance)
+        new_tol = [mask_starting_image] + new_tol[1:len(images)]
+        masked = [selected_masked] + masked[1:len(images)]
+    elif image_number == len(images) - 1:
+        new_tol, masked = evolve_fill(images, 0, len(images) - 1, mask_starting_image,
+                                      average_gray, flood_fill_tolerance=flood_fill_tolerance)
+        new_tol = new_tol[0:len(images) - 1] + [mask_starting_image]
+        masked = masked[0:len(images) - 1] + selected_masked
+    else:
+        new_tol_upper, masked_upper = evolve_fill(images, image_number, len(images), mask_starting_image,
+                                                  average_gray, flood_fill_tolerance=flood_fill_tolerance)
+        new_tol_lower, masked_lower = evolve_fill(images, image_number - 1, 0, mask_starting_image, average_gray,
+                                                  flood_fill_tolerance=flood_fill_tolerance)
 
-    new_tol_upper, masked_upper = evolve_fill(images, image_number, len(images), mask_starting_image,
-                                              average_gray, flood_fill_tolerance=flood_fill_tolerance)
-    new_tol_lower, masked_lower = evolve_fill(images, image_number - 1, 0, mask_starting_image, average_gray,
-                                              flood_fill_tolerance=flood_fill_tolerance)
-
-    new_tol = new_tol_lower[0:image_number] + [mask_starting_image] + new_tol_upper[image_number + 1:len(images)]
-    masked = masked_lower[0:image_number] + [selected_masked] + masked_upper[image_number + 1:len(images)]
+        new_tol = new_tol_lower[0:image_number] + [mask_starting_image] + new_tol_upper[image_number + 1:len(images)]
+        masked = masked_lower[0:image_number] + [selected_masked] + masked_upper[image_number + 1:len(images)]
 
     return new_tol, masked
