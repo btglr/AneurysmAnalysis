@@ -216,8 +216,8 @@ def nan_if(arr, value):
 
 def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood_fill_tolerance):
     step = 1
-    new_tol = [None] * len(images)
-    masked = [None] * len(images)
+    new_tol = [np.zeros(starting_image.shape)] * len(images)
+    masked = [np.zeros(starting_image.shape)] * len(images)
 
     selected_fill = starting_image
     average_gray = starting_average_gray
@@ -247,7 +247,6 @@ def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood
 
         if combined.shape[0] == 0:
             print("Found no new starting point with the given tolerance")
-            new_tol[image_number] = new_tol[image_number - step]
             continue
 
         # Take a random starting point
