@@ -5,3 +5,6 @@ ls = []
 images_drawn = []
 current_image_slider = 0
 median_images = []
+results = []
+starting_coordinates = (0, 0)
+flood_fill_tolerance = 0.2

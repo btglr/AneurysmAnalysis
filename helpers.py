@@ -2,7 +2,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.widgets import Slider
+from matplotlib.widgets import Slider, TextBox
 from pydicom import dcmread
 from scipy import ndimage
 from skimage.morphology import flood_fill
@@ -112,8 +112,18 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
         plt.yticks([])
         plt.xlabel(globals.images_drawn[k][0])
 
-    axamp = plt.axes([0.25, .03, 0.50, 0.02])
-    sframe = Slider(axamp, 'Image', 0, len(globals.images_drawn[0][1]) - 1, valinit=0, valstep=1, valfmt="%i")
+    ax_image_slider = plt.axes([0.25, .03, 0.50, 0.02])
+    ax_flood_fill_textbox = plt.axes([0.08, 0.95, 0.05, 0.04])
+    image_slider = Slider(ax_image_slider, 'Image', 0, len(globals.images_drawn[0][1]) - 1, valinit=0, valstep=1,
+                          valfmt="%i")
+    flood_fill_textbox = TextBox(ax_flood_fill_textbox, 'Flood Fill Tolerance',
+                                 initial=str(globals.flood_fill_tolerance))
+
+    mask_element = [mask_element for mask_element in globals.images_drawn if 'Mask' in mask_element][0]
+    result_element = [result_element for result_element in globals.images_drawn if 'Mask' in result_element][0]
+
+    index_mask = globals.images_drawn.index(mask_element)
+    index_result = globals.images_drawn.index(result_element)
 
     def update(val):
         val = int(val)
@@ -122,7 +132,17 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
         for k, l in enumerate(globals.ls):
             l.set_data(globals.images_drawn[k][1][val])
 
-    sframe.on_changed(update)
+    def update_flood_fill_tolerance(text):
+        if globals.flood_fill_tolerance != float(text):
+            globals.flood_fill_tolerance = float(text)
+            globals.images_drawn[index_mask][1], globals.images_drawn[index_result][1] = evolutive_flood_fill(
+                globals.median_images, globals.flood_fill_tolerance, globals.starting_coordinates)
+
+            globals.ls[index_mask].set_data(globals.images_drawn[index_mask][1][globals.current_image_slider])
+            globals.ls[index_result].set_data(globals.images_drawn[index_result][1][globals.current_image_slider])
+
+    image_slider.on_changed(update)
+    flood_fill_textbox.on_submit(update_flood_fill_tolerance)
     # fig.subplots_adjust(wspace=0, hspace=0)
 
     if click_handler is not None:
@@ -163,20 +183,27 @@ def select_region(event):
         x = int(event.xdata)
         y = int(event.ydata)
 
-        print("Apply flood fill at coordinates: ({}, {})".format(x, y))
-
-        for k, l in enumerate(globals.ls):
-            params = globals.images_drawn[k][2]
-
-            if params['type'] == 'flood_fill':
-                tol = params['tolerance']
-
-                # Coordinates are height, width instead of width, height in numpy
-                # We therefore apply the flood fill to the coordinates (y, x)
-                globals.images_drawn[k][1], _ = evolutive_flood_fill(globals.median_images, tol, (y, x))
-                l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
-
+        globals.starting_coordinates = (y, x)
+        apply_flood_fill_subplots(globals.starting_coordinates)
         globals.fig.canvas.draw()
+
+
+def apply_flood_fill_subplots(coordinates):
+    print("Apply flood fill at coordinates: ({}, {})".format(coordinates[1], coordinates[0]))
+
+    for k, l in enumerate(globals.ls):
+        params = globals.images_drawn[k][2]
+
+        if params['type'] == 'flood_fill':
+            tol = params['tolerance']
+
+            # Coordinates are height, width instead of width, height in numpy
+            # We therefore apply the flood fill to the coordinates (y, x)
+            globals.images_drawn[k][1], globals.results = evolutive_flood_fill(globals.median_images, tol, coordinates)
+            l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
+        elif params['type'] == 'result':
+            globals.images_drawn[k][1] = globals.results
+            l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
 
 
 def apply_random_walker(image):

@@ -80,41 +80,13 @@ for patient in ds.patient_records:
                 path = Path(dataset_path).joinpath("{}_median".format(p))
                 median_dcm.save_as(path)
 
-            for median_image in denoised_images:
-                thresh = apply_threshold(median_image)
-                random_walker = apply_random_walker(median_image)
-
-                for tol in np.linspace(0.2, 0.4, 12):
-                    str_tol = "{:.2f}".format(tol)
-
-                    if str_tol not in fills:
-                        fills[str_tol] = []
-
-                    fill = apply_flood_fill(median_image, (76, 69), tol)
-                    fills[str_tol].append(fill)
-
-                threshold_images.append(thresh)
-                random_walker_images.append(random_walker)
-
-            all_images = []
-
-            all_images.append(['Original', [image.pixel_array for image, _ in images], {'type': 'original'}])
-            all_images.append(['Median Filter', denoised_images, {'type': 'median_filter'}])
-            all_images.append(['Threshold', threshold_images, {'type': 'threshold'}])
-            all_images.append(['Random Walker', random_walker_images, {'type': 'random_walker'}])
-
             globals.median_images = denoised_images
+            globals.flood_fill_tolerance = 0.31
 
-            for tol in fills:
-                all_images.append(
-                    ['Flood Fill Tol {}'.format(tol), fills[tol], {'type': 'flood_fill', 'tolerance': float(tol)}])
-
-            subplots_slider(all_images, click_handler=select_region, zoom=1)
-
-            mask, result = evolutive_flood_fill(denoised_images, 0.31, (76, 69))
-
+            mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70))
             subplots_slider(
-                [['Mask', mask, {'type': 'flood_fill', 'tolerance': 0.31}],
-                 ['Result', result, {'type': 'median_filter'}],
-                 ['Median Filter', denoised_images, {'type': 'median_filter'}]],
-                click_handler=select_region, zoom=1)
+                [['Original', [image.pixel_array for image, _ in images], {'type': 'original'}],
+                 ['Median Filter', denoised_images, {'type': 'median_filter'}],
+                 ['Mask', mask, {'type': 'flood_fill', 'tolerance': globals.flood_fill_tolerance}],
+                 ['Result', result, {'type': 'result'}]],
+                click_handler=select_region, zoom=3)
