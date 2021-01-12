@@ -228,7 +228,7 @@ def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood
         # Apply the mask to the image
         selected_gray = images[image_number]
         selected_masked = selected_gray * selected_fill
-        atol = 20
+        atol = int(0.10 * average_gray)
 
         print("Searching for grays within ± {} of the average value of {}".format(atol, average_gray))
 
