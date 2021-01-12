@@ -277,7 +277,7 @@ def evolutive_flood_fill(images, flood_fill_tolerance, starting_coordinates):
     # Get the gray value at the starting coordinates
     gray_at_starting_coordinates = images[image_number][starting_coordinates]
 
-    print("Average gray: {}".format(gray_at_starting_coordinates))
+    print("Gray value: {}".format(gray_at_starting_coordinates))
 
     if image_number == 0:
         new_tol, masked = evolve_fill(images, 1, len(images), mask_starting_image,
