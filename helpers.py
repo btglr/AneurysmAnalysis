@@ -238,6 +238,11 @@ def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood
         # Combine the two 1D arrays so we get an array of (y, x) coordinates
         combined = np.column_stack(close_values)
 
+        if combined.shape[0] == 0:
+            print("Found no new starting point with the given tolerance")
+            new_tol[image_number] = new_tol[image_number - step]
+            continue
+
         # Take a random starting point
         index = np.random.randint(0, combined.shape[0])
 
