@@ -115,5 +115,6 @@ for patient in ds.patient_records:
 
             subplots_slider(
                 [('Result', new_tol, {'type': 'flood_fill', 'tolerance': 0.31}),
-                 ('Masked', masked, {'type': 'median_filter'})],
+                 ('Masked', masked, {'type': 'median_filter'}),
+                 ('Median Filter', denoised_images, {'type': 'median_filter'})],
                 click_handler=None, zoom=1)
