@@ -111,10 +111,10 @@ for patient in ds.patient_records:
 
             subplots_slider(all_images, click_handler=select_region, zoom=1)
 
-            new_tol, masked = evolutive_flood_fill(denoised_images, 0.31, (76, 69))
+            mask, result = evolutive_flood_fill(denoised_images, 0.31, (76, 69))
 
             subplots_slider(
-                [['Result', new_tol, {'type': 'flood_fill', 'tolerance': 0.31}],
-                 ['Masked', masked, {'type': 'median_filter'}],
+                [['Mask', mask, {'type': 'flood_fill', 'tolerance': 0.31}],
+                 ['Result', result, {'type': 'median_filter'}],
                  ['Median Filter', denoised_images, {'type': 'median_filter'}]],
                 click_handler=select_region, zoom=1)
