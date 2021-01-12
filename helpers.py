@@ -210,13 +210,13 @@ def nan_if(arr, value):
     return np.where(arr == value, np.nan, arr)
 
 
-def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood_fill_tolerance):
+def evolve_fill(images, begin, end, starting_image, gray_at_starting_coordinates, flood_fill_tolerance):
     step = 1
     new_tol = [np.zeros(starting_image.shape)] * len(images)
     masked = [np.zeros(starting_image.shape)] * len(images)
 
     selected_fill = starting_image
-    average_gray = starting_average_gray
+    gray_at_coordinates = gray_at_starting_coordinates
 
     if begin > end:
         step = -1
@@ -231,12 +231,12 @@ def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood
         # Apply the mask to the image
         selected_gray = images[image_number]
         selected_masked = selected_gray * selected_fill
-        atol = int(0.10 * average_gray)
+        atol = int(0.10 * gray_at_coordinates)
 
-        print("Searching for grays within ± {} of the average value of {}".format(atol, average_gray))
+        print("Searching for grays within ± {} of the average value of {}".format(atol, gray_at_coordinates))
 
         # Find a new starting point
-        close_values = np.where(np.isclose(selected_masked, average_gray, atol=atol))
+        close_values = np.where(np.isclose(selected_masked, gray_at_coordinates, atol=atol))
 
         # Combine the two 1D arrays so we get an array of (y, x) coordinates
         combined = np.column_stack(close_values)
@@ -258,7 +258,7 @@ def evolve_fill(images, begin, end, starting_image, starting_average_gray, flood
         selected_fill = new_tol[image_number]
         selected_masked = selected_gray * selected_fill
         masked[image_number] = selected_masked
-        average_gray = int(np.nanmean(nan_if(selected_masked, 0)))
+        gray_at_coordinates = images[image_number][new_coordinates]
 
     return new_tol, masked
 
@@ -274,25 +274,27 @@ def evolutive_flood_fill(images, flood_fill_tolerance, starting_coordinates):
     # Multiply the gray image with the mask
     selected_masked = selected_gray * mask_starting_image
 
-    # Get the average value of the result
-    average_gray = int(np.nanmean(nan_if(selected_masked, 0)))
+    # Get the gray value at the starting coordinates
+    gray_at_starting_coordinates = images[image_number][starting_coordinates]
 
-    print("Average gray: {}".format(average_gray))
+    print("Average gray: {}".format(gray_at_starting_coordinates))
 
     if image_number == 0:
         new_tol, masked = evolve_fill(images, 1, len(images), mask_starting_image,
-                                      average_gray, flood_fill_tolerance=flood_fill_tolerance)
+                                      gray_at_starting_coordinates, flood_fill_tolerance=flood_fill_tolerance)
         new_tol = [mask_starting_image] + new_tol[1:len(images)]
         masked = [selected_masked] + masked[1:len(images)]
     elif image_number == len(images) - 1:
         new_tol, masked = evolve_fill(images, 0, len(images) - 1, mask_starting_image,
-                                      average_gray, flood_fill_tolerance=flood_fill_tolerance)
+                                      gray_at_starting_coordinates, flood_fill_tolerance=flood_fill_tolerance)
         new_tol = new_tol[0:len(images) - 1] + [mask_starting_image]
         masked = masked[0:len(images) - 1] + selected_masked
     else:
         new_tol_upper, masked_upper = evolve_fill(images, image_number, len(images), mask_starting_image,
-                                                  average_gray, flood_fill_tolerance=flood_fill_tolerance)
-        new_tol_lower, masked_lower = evolve_fill(images, image_number - 1, 0, mask_starting_image, average_gray,
+                                                  gray_at_starting_coordinates,
+                                                  flood_fill_tolerance=flood_fill_tolerance)
+        new_tol_lower, masked_lower = evolve_fill(images, image_number - 1, 0, mask_starting_image,
+                                                  gray_at_starting_coordinates,
                                                   flood_fill_tolerance=flood_fill_tolerance)
 
         new_tol = new_tol_lower[0:image_number] + [mask_starting_image] + new_tol_upper[image_number + 1:len(images)]
