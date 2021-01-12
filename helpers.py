@@ -2,7 +2,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.widgets import Slider, TextBox
+from matplotlib.widgets import Slider, TextBox, Button
 from pydicom import dcmread
 from scipy import ndimage
 from skimage.morphology import flood_fill
@@ -114,10 +114,12 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
 
     ax_image_slider = plt.axes([0.25, .03, 0.50, 0.02])
     ax_flood_fill_textbox = plt.axes([0.08, 0.95, 0.05, 0.04])
+    ax_save_button = plt.axes([0.01, 0.90, 0.10, 0.04])
     image_slider = Slider(ax_image_slider, 'Image', 0, len(globals.images_drawn[0][1]) - 1, valinit=0, valstep=1,
                           valfmt="%i")
     flood_fill_textbox = TextBox(ax_flood_fill_textbox, 'Flood Fill Tolerance',
                                  initial=str(globals.flood_fill_tolerance))
+    save_button = Button(ax_save_button, 'Save current mask', color='0.85', hovercolor='0.95')
 
     mask_element = [mask_element for mask_element in globals.images_drawn if 'Mask' in mask_element][0]
     result_element = [result_element for result_element in globals.images_drawn if 'Result' in result_element][0]
