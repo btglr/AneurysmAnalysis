@@ -53,9 +53,6 @@ for patient in ds.patient_records:
 
             images = []
             denoised_images = []
-            threshold_images = []
-            random_walker_images = []
-            fills = {}
 
             i = 0
             # List the instance file paths
