@@ -8,3 +8,4 @@ median_images = []
 results = []
 starting_coordinates = (0, 0)
 flood_fill_tolerance = 0.2
+dataset_path = None

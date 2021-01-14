@@ -3,6 +3,7 @@ import copy
 from helpers import *
 
 dataset_path = "ImgTP/Ge1CaroG/MR_3DPCA"
+globals.dataset_path = dataset_path
 ds = load_dataset(dataset_path)
 
 # Iterate through the PATIENT records
@@ -44,9 +45,15 @@ for patient in ds.patient_records:
                 median_dcm = copy.deepcopy(image)
                 median_dcm.PixelData = median.tobytes()
 
-                path = Path(dataset_path).joinpath("{}_median".format(p))
-                median_dcm.save_as(path)
+                filename = p.name
+                study_folder = p.parent.parent
+                result_folder = Path(globals.dataset_path).joinpath(study_folder).joinpath('median')
+                result_folder.mkdir(parents=True, exist_ok=True)
 
+                filepath = result_folder.joinpath(filename)
+                median_dcm.save_as(filepath)
+
+            globals.images = copy.deepcopy(images)
             globals.median_images = denoised_images
             globals.flood_fill_tolerance = 0.31
 

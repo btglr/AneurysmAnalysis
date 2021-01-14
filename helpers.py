@@ -1,3 +1,4 @@
+import copy
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -143,8 +144,25 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
             globals.ls[index_mask].set_data(globals.images_drawn[index_mask][1][globals.current_image_slider])
             globals.ls[index_result].set_data(globals.images_drawn[index_result][1][globals.current_image_slider])
 
+    def save_result(event):
+        original_images = copy.deepcopy(globals.images)
+
+        for i, elem in enumerate(globals.images_drawn[index_result][1]):
+            image_elem, p = original_images[i]
+            filename = p.name
+            study_folder = p.parent.parent
+
+            image_elem.PixelData = globals.images_drawn[index_result][1][i].astype('uint16').tobytes()
+
+            result_folder = Path(globals.dataset_path).joinpath(study_folder).joinpath('result')
+            result_folder.mkdir(parents=True, exist_ok=True)
+
+            filepath = result_folder.joinpath(filename)
+            image_elem.save_as(filepath)
+
     image_slider.on_changed(update)
     flood_fill_textbox.on_submit(update_flood_fill_tolerance)
+    save_button.on_clicked(save_result)
     # fig.subplots_adjust(wspace=0, hspace=0)
 
     if click_handler is not None:
