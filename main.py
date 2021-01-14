@@ -57,7 +57,8 @@ for patient in ds.patient_records:
             globals.median_images = denoised_images
             globals.flood_fill_tolerance = 0.31
 
-            mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70))
+            mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
+                                                starting_image=16)
             subplots_slider(
                 [['Original', [image.pixel_array for image, _ in images], {'type': 'original'}],
                  ['Median Filter', denoised_images, {'type': 'median_filter'}],

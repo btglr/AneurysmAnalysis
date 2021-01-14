@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib.widgets import Slider, TextBox, Button
 from pydicom import dcmread
 from scipy import ndimage
+from scipy.spatial.distance import cdist
 from skimage.morphology import flood_fill
 from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_bilateral
 from skimage.segmentation import random_walker
@@ -209,8 +210,6 @@ def select_region(event):
 
 
 def apply_flood_fill_subplots(coordinates):
-    print("Apply flood fill at coordinates: ({}, {})".format(coordinates[1], coordinates[0]))
-
     for k, l in enumerate(globals.ls):
         params = globals.images_drawn[k][2]
 
@@ -257,12 +256,12 @@ def nan_if(arr, value):
     return np.where(arr == value, np.nan, arr)
 
 
-def evolve_fill(images, begin, end, starting_image, gray_at_starting_coordinates, flood_fill_tolerance):
+def evolve_fill(images, begin, end, starting_image, gray_at_starting_coordinates, flood_fill_tolerance,
+                starting_coordinates):
     step = 1
     mask = [np.zeros(starting_image.shape)] * len(images)
     result = [np.zeros(starting_image.shape)] * len(images)
 
-    selected_fill = starting_image
     gray_at_coordinates = gray_at_starting_coordinates
 
     if begin > end:
@@ -274,45 +273,54 @@ def evolve_fill(images, begin, end, starting_image, gray_at_starting_coordinates
     # print(begin, end, step)
 
     for image_number in range(begin, end, step):
-        print("Image {}".format(image_number))
+        print("\nImage {}".format(image_number))
         # Apply the mask to the image
         selected_gray = images[image_number]
-        selected_masked = selected_gray * selected_fill
-        atol = int(0.10 * gray_at_coordinates)
+        atol = int(0.05 * gray_at_coordinates)
 
-        print("Searching for grays within ± {} of the average value of {}".format(atol, gray_at_coordinates))
+        print("  Searching for grays within ± {} of the average value of {}".format(atol, gray_at_coordinates))
 
         # Find a new starting point
-        close_values = np.where(np.isclose(selected_masked, gray_at_coordinates, atol=atol))
+        close_values = np.where(np.isclose(selected_gray, gray_at_coordinates, atol=atol))
 
         # Combine the two 1D arrays so we get an array of (y, x) coordinates
         combined = np.column_stack(close_values)
 
         if combined.shape[0] == 0:
-            print("Found no new starting point with the given tolerance")
+            print("  Found no new starting point with the given tolerance")
             continue
 
-        # Take a random starting point
-        index = np.random.randint(0, combined.shape[0])
+        distances = cdist(np.array([starting_coordinates]), combined)
+        values = [int(selected_gray[combined[i][0], combined[i][1]]) - int(gray_at_coordinates) for i in
+                  range(combined.shape[0])]
 
-        new_coordinates = (combined[index][0], combined[index][1])
+        # Sort by how close to the starting gray value the new values are, then by their distance to the starting
+        # coordinates
+        idx_sort = np.lexsort((distances[0], np.abs(values)))
+        new_coordinates = (combined[idx_sort[0]][0], combined[idx_sort[0]][1])
 
-        print("New starting coordinates: ({}, {}) | Value: {}".format(combined[index][1], combined[index][0],
-                                                                      selected_gray[
-                                                                          combined[index][0], combined[index][1]]))
+        # for i in range(5 if len(idx_sort) > 5 else len(idx_sort)):
+        #     coords = (combined[idx_sort[i]][0], combined[idx_sort[i]][1])
+        #     d = distances[0][idx_sort[i]]
+        #     print(coords, d, selected_gray[coords])
+
+        gray_at_coordinates = selected_gray[new_coordinates]
+
+        print("  New starting coordinates: ({}, {}) | Value: {}".format(new_coordinates[1], new_coordinates[0],
+                                                                        gray_at_coordinates))
 
         mask[image_number] = apply_flood_fill(selected_gray, new_coordinates, flood_fill_tolerance)
         selected_fill = mask[image_number]
         selected_masked = selected_gray * selected_fill
         result[image_number] = selected_masked
-        gray_at_coordinates = images[image_number][new_coordinates]
 
     return mask, result
 
 
-def evolutive_flood_fill(images, flood_fill_tolerance, starting_coordinates):
+def evolutive_flood_fill(images, flood_fill_tolerance, starting_coordinates,
+                         starting_image=None):
     # Select image
-    image_number = globals.current_image_slider
+    image_number = starting_image if starting_image is not None else globals.current_image_slider
 
     # Select the image number from each set
     selected_gray = images[image_number]
@@ -324,25 +332,26 @@ def evolutive_flood_fill(images, flood_fill_tolerance, starting_coordinates):
     # Get the gray value at the starting coordinates
     gray_at_starting_coordinates = images[image_number][starting_coordinates]
 
-    print("Gray value: {}".format(gray_at_starting_coordinates))
+    print("Apply flood fill at coordinates: ({}, {})".format(starting_coordinates[1], starting_coordinates[0]))
+    print("Gray value for image {}: {}".format(image_number, gray_at_starting_coordinates))
 
     if image_number == 0:
-        mask, result = evolve_fill(images, 1, len(images), mask_starting_image,
-                                   gray_at_starting_coordinates, flood_fill_tolerance=flood_fill_tolerance)
+        mask, result = evolve_fill(images, 1, len(images), mask_starting_image, gray_at_starting_coordinates,
+                                   flood_fill_tolerance, starting_coordinates)
         mask = [mask_starting_image] + mask[1:len(images)]
         result = [selected_masked] + result[1:len(images)]
     elif image_number == len(images) - 1:
-        mask, result = evolve_fill(images, 0, len(images) - 1, mask_starting_image,
-                                   gray_at_starting_coordinates, flood_fill_tolerance=flood_fill_tolerance)
+        mask, result = evolve_fill(images, 0, len(images) - 1, mask_starting_image, gray_at_starting_coordinates,
+                                   flood_fill_tolerance, starting_coordinates)
         mask = mask[0:len(images) - 1] + [mask_starting_image]
         result = result[0:len(images) - 1] + selected_masked
     else:
         mask_upper, result_upper = evolve_fill(images, image_number, len(images), mask_starting_image,
-                                               gray_at_starting_coordinates,
-                                               flood_fill_tolerance=flood_fill_tolerance)
+                                               gray_at_starting_coordinates, flood_fill_tolerance,
+                                               starting_coordinates)
         mask_lower, result_lower = evolve_fill(images, image_number - 1, 0, mask_starting_image,
-                                               gray_at_starting_coordinates,
-                                               flood_fill_tolerance=flood_fill_tolerance)
+                                               gray_at_starting_coordinates, flood_fill_tolerance,
+                                               starting_coordinates)
 
         mask = mask_lower[0:image_number] + [mask_starting_image] + mask_upper[image_number + 1:len(images)]
         result = result_lower[0:image_number] + [selected_masked] + result_upper[image_number + 1:len(images)]
