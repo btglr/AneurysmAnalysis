@@ -1,8 +1,7 @@
 import skimage.morphology
-from helpers import *
-from PIL import Image
-from resizeimage import resizeimage
 import cv2
+from helpers import *
+
 
 dataset_path = "ImgTP/Ge1CaroG/MR_3DPCA"
 globals.dataset_path = dataset_path
@@ -62,13 +61,13 @@ for patient in ds.patient_records:
             mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
                                                 starting_image=16)
             width, height = mask[0].shape
-            dsize = (width*10, height*10)
+            dsize = (width*5, height*5)
 
             mask = [cv2.resize(image_mask, dsize) for image_mask in mask]
-            skeleton = [skimage.morphology.skeletonize(image_mask) for image_mask in mask]
+            skeleton = skimage.morphology.skeletonize_3d(np.array(mask))
             subplots_slider(
                 [['Original', [image.pixel_array for image, _ in images], {'type': 'original'}],
                  ['Median Filter', denoised_images, {'type': 'median_filter'}],
                  ['Mask', mask, {'type': 'flood_fill', 'tolerance': globals.flood_fill_tolerance}],
-                 ['Squelette', skeleton, {'type': 'result'}]],
+                 ['Result', skeleton, {'type': 'result'}]],
                 click_handler=select_region, zoom=3)
