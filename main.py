@@ -60,8 +60,8 @@ for patient in ds.patient_records:
 
             mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
                                                 starting_image=16)
-            width, height = mask[0].shape
-            dsize = (width*5, height*5)
+            height, width = mask[0].shape
+            dsize = (width * 5, height * 5)
 
             mask = [cv2.resize(image_mask, dsize) for image_mask in mask]
             skeleton = skimage.morphology.skeletonize_3d(np.array(mask))
