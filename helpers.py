@@ -1,17 +1,17 @@
 import copy
 from pathlib import Path
 
+import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
-import cv2 as cv
 from matplotlib.widgets import Slider, TextBox, Button
 from pydicom import dcmread
 from scipy import ndimage
 from scipy.spatial.distance import cdist
-from skimage.morphology import flood_fill, flood
+from skimage.morphology import flood
+from skimage.morphology import skeletonize_3d
 from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_bilateral
 from skimage.segmentation import random_walker
-from skimage.morphology import skeletonize_3d
 
 import globals
 

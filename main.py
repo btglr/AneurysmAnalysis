@@ -69,8 +69,7 @@ for patient in ds.patient_records:
                 study_folder = p.parent.parent
 
                 image_elem.PixelData = skeleton[i].astype('uint16').tobytes()
-                image_elem.Rows = skeleton[0].shape[0]
-                image_elem.Columns = skeleton[0].shape[1]
+                image_elem.Rows, image_elem.Columns = skeleton[0].shape
 
                 result_folder = Path(globals.dataset_path).joinpath(study_folder).joinpath('skeleton')
                 result_folder.mkdir(parents=True, exist_ok=True)
