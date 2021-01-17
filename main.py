@@ -1,7 +1,7 @@
-import skimage.morphology
 import cv2
-from helpers import *
+import skimage.morphology
 
+from helpers import *
 
 dataset_path = "ImgTP/Ge1CaroG/MR_3DPCA"
 globals.dataset_path = dataset_path
@@ -65,9 +65,27 @@ for patient in ds.patient_records:
 
             mask = [cv2.resize(image_mask, dsize) for image_mask in mask]
             skeleton = skimage.morphology.skeletonize_3d(np.array(mask))
+            original_images = copy.deepcopy(globals.images)
+
+            for i, elem in enumerate(skeleton):
+                image_elem, p = original_images[i]
+                filename = p.name
+                study_folder = p.parent.parent
+
+                image_elem.PixelData = skeleton[i].astype('uint16').tobytes()
+                image_elem.Rows = dsize[1]
+                image_elem.Columns = dsize[0]
+
+                result_folder = Path(globals.dataset_path).joinpath(study_folder).joinpath('skeleton')
+                result_folder.mkdir(parents=True, exist_ok=True)
+
+                filepath = result_folder.joinpath(filename)
+                image_elem.save_as(filepath)
+
             subplots_slider(
                 [['Original', [image.pixel_array for image, _ in images], {'type': 'original'}],
                  ['Median Filter', denoised_images, {'type': 'median_filter'}],
                  ['Mask', mask, {'type': 'flood_fill', 'tolerance': globals.flood_fill_tolerance}],
-                 ['Result', skeleton, {'type': 'result'}]],
+                 ['Result', result, {'type': 'result'}],
+                 ['Skeleton', skeleton, {'type': 'skeleton'}]],
                 click_handler=select_region, zoom=3)
