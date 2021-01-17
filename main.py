@@ -1,5 +1,3 @@
-import skimage.morphology
-import cv2
 from helpers import *
 
 
@@ -60,11 +58,8 @@ for patient in ds.patient_records:
 
             mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
                                                 starting_image=16)
-            width, height = mask[0].shape
-            dsize = (width*5, height*5)
+            skeleton = resize_and_skeleton_3d(mask, 5)
 
-            mask = [cv2.resize(image_mask, dsize) for image_mask in mask]
-            skeleton = skimage.morphology.skeletonize_3d(np.array(mask))
             subplots_slider(
                 [['Original', [image.pixel_array for image, _ in images], {'type': 'original'}],
                  ['Median Filter', denoised_images, {'type': 'median_filter'}],
