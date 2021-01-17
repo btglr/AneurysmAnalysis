@@ -3,6 +3,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import cv2 as cv
 from matplotlib.widgets import Slider, TextBox, Button
 from pydicom import dcmread
 from scipy import ndimage
@@ -10,6 +11,7 @@ from scipy.spatial.distance import cdist
 from skimage.morphology import flood_fill, flood
 from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_bilateral
 from skimage.segmentation import random_walker
+from skimage.morphology import skeletonize_3d
 
 import globals
 
@@ -355,3 +357,10 @@ def evolutive_flood_fill(images, flood_fill_tolerance, starting_coordinates,
         result = result_lower[0:image_number] + [selected_masked] + result_upper[image_number + 1:len(images)]
 
     return mask, result
+
+
+def resize_and_skeleton_3d(mask, factor):
+    height, width = mask[0].shape
+    dsize = (width * factor, height * factor)
+    new_mask = [cv.resize(image_mask, dsize) for image_mask in mask]
+    return skeletonize_3d(np.array(new_mask))

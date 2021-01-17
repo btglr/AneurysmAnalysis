@@ -60,11 +60,7 @@ for patient in ds.patient_records:
 
             mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
                                                 starting_image=16)
-            height, width = mask[0].shape
-            dsize = (width * 5, height * 5)
-
-            mask = [cv2.resize(image_mask, dsize) for image_mask in mask]
-            skeleton = skimage.morphology.skeletonize_3d(np.array(mask))
+            skeleton = resize_and_skeleton_3d(mask, 5)
             original_images = copy.deepcopy(globals.images)
 
             for i, elem in enumerate(skeleton):
@@ -73,8 +69,8 @@ for patient in ds.patient_records:
                 study_folder = p.parent.parent
 
                 image_elem.PixelData = skeleton[i].astype('uint16').tobytes()
-                image_elem.Rows = dsize[1]
-                image_elem.Columns = dsize[0]
+                image_elem.Rows = skeleton[0].shape[0]
+                image_elem.Columns = skeleton[0].shape[1]
 
                 result_folder = Path(globals.dataset_path).joinpath(study_folder).joinpath('skeleton')
                 result_folder.mkdir(parents=True, exist_ok=True)
