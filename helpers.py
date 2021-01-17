@@ -7,7 +7,7 @@ from matplotlib.widgets import Slider, TextBox, Button
 from pydicom import dcmread
 from scipy import ndimage
 from scipy.spatial.distance import cdist
-from skimage.morphology import flood_fill
+from skimage.morphology import flood_fill, flood
 from skimage.restoration import denoise_nl_means, estimate_sigma, denoise_bilateral
 from skimage.segmentation import random_walker
 
@@ -244,12 +244,10 @@ def apply_random_walker(image):
 def apply_flood_fill(image, starting_coordinates, tolerance):
     upper_bound = np.max(image)
     img_as_float = image / upper_bound
-    fill = flood_fill(img_as_float, starting_coordinates, 1.0, tolerance=tolerance)
+    mask = flood(img_as_float, starting_coordinates, tolerance=tolerance)
+    mask = mask.astype('uint16')
 
-    # Zero all values that haven't been replaced by the flood fill, effectively turning the image into a binary image
-    fill[fill < 1.0] = 0
-
-    return fill
+    return mask
 
 
 def nan_if(arr, value):
