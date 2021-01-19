@@ -117,12 +117,18 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
         plt.xlabel(globals.images_drawn[k][0])
 
     ax_image_slider = plt.axes([0.25, .03, 0.50, 0.02])
-    ax_flood_fill_textbox = plt.axes([0.08, 0.95, 0.05, 0.04])
-    ax_save_button = plt.axes([0.01, 0.90, 0.10, 0.04])
+    ax_flood_fill_tolerance_textbox = plt.axes([0.06, 0.95, 0.05, 0.04])
+    ax_seed_tolerance_textbox = plt.axes([0.06, 0.90, 0.05, 0.04])
+    ax_resize_factor_textbox = plt.axes([0.06, 0.85, 0.05, 0.04])
+    ax_save_button = plt.axes([0.01, 0.80, 0.10, 0.04])
     image_slider = Slider(ax_image_slider, 'Image', 0, len(globals.images_drawn[0][1]) - 1, valinit=0, valstep=1,
                           valfmt="%i")
-    flood_fill_textbox = TextBox(ax_flood_fill_textbox, 'Flood Fill Tolerance',
-                                 initial=str(globals.flood_fill_tolerance))
+    flood_fill_tolerance_textbox = TextBox(ax_flood_fill_tolerance_textbox, 'Flood Fill Tolerance',
+                                           initial=str(globals.flood_fill_tolerance))
+    seed_tolerance_textbox = TextBox(ax_seed_tolerance_textbox, 'Seed Tolerance',
+                                     initial=str(globals.seed_tolerance))
+    resize_factor_textbox = TextBox(ax_resize_factor_textbox, 'Resize Skel. Factor',
+                                    initial=str(globals.skeleton_factor))
     save_button = Button(ax_save_button, 'Save mask and skeleton', color='0.85', hovercolor='0.95')
 
     result_element = [image_set for image_set in globals.images_drawn if image_set[0] == 'Result'][0]
@@ -140,6 +146,18 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
     def update_flood_fill_tolerance(text):
         if globals.flood_fill_tolerance != float(text):
             globals.flood_fill_tolerance = float(text)
+            apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image,
+                                      flood_fill_tolerance=globals.flood_fill_tolerance)
+
+    def update_seed_tolerance(text):
+        if globals.seed_tolerance != float(text):
+            globals.seed_tolerance = float(text)
+            apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image,
+                                      flood_fill_tolerance=globals.flood_fill_tolerance)
+
+    def update_resize_factor(text):
+        if globals.skeleton_factor != int(text):
+            globals.skeleton_factor = int(text)
             apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image,
                                       flood_fill_tolerance=globals.flood_fill_tolerance)
 
@@ -169,7 +187,9 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
             image_elem.save_as(filepath)
 
     image_slider.on_changed(update)
-    flood_fill_textbox.on_submit(update_flood_fill_tolerance)
+    flood_fill_tolerance_textbox.on_submit(update_flood_fill_tolerance)
+    seed_tolerance_textbox.on_submit(update_seed_tolerance)
+    resize_factor_textbox.on_submit(update_resize_factor)
     save_button.on_clicked(save_result)
     # fig.subplots_adjust(wspace=0, hspace=0)
 
@@ -294,7 +314,7 @@ def evolve_fill(images, begin, end, mask_starting_image, gray_at_starting_coordi
         print("Image {}".format(image_number))
 
         selected_gray = images[image_number]
-        atol = int(0.05 * gray_at_coordinates)
+        atol = int(globals.seed_tolerance * gray_at_coordinates)
 
         print("  Searching for grays within ± {} of the gray value {}".format(atol, gray_at_coordinates))
 
