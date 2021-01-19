@@ -256,11 +256,11 @@ def nan_if(arr, value):
     return np.where(arr == value, np.nan, arr)
 
 
-def evolve_fill(images, begin, end, starting_image, gray_at_starting_coordinates, flood_fill_tolerance,
+def evolve_fill(images, begin, end, mask_starting_image, gray_at_starting_coordinates, flood_fill_tolerance,
                 starting_coordinates):
     step = 1
-    mask = [np.zeros(starting_image.shape)] * len(images)
-    result = [np.zeros(starting_image.shape)] * len(images)
+    mask = [np.zeros(mask_starting_image.shape)] * len(images)
+    result = [np.zeros(mask_starting_image.shape)] * len(images)
 
     gray_at_coordinates = gray_at_starting_coordinates
 
