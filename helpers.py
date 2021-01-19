@@ -270,24 +270,28 @@ def evolve_fill(images, begin, end, mask_starting_image, gray_at_starting_coordi
     else:
         begin += 1
 
+    print("Beginning evolution of flood fill from image {}".format(begin))
+    print("Looping from {} to {}\n".format(begin, end))
+    mask[begin - step] = mask_starting_image
+
     # print(begin, end, step)
 
     for image_number in range(begin, end, step):
-        print("\nImage {}".format(image_number))
-        # Apply the mask to the image
+        print("Image {}".format(image_number))
+
         selected_gray = images[image_number]
         atol = int(0.05 * gray_at_coordinates)
 
-        print("  Searching for grays within ± {} of the average value of {}".format(atol, gray_at_coordinates))
+        print("  Searching for grays within ± {} of the gray value {}".format(atol, gray_at_coordinates))
 
         # Find a new starting point
-        close_values = np.where(np.isclose(selected_gray, gray_at_coordinates, atol=atol))
+        close_values = np.where(np.isclose(selected_gray * mask[image_number - step], gray_at_coordinates, atol=atol))
 
         # Combine the two 1D arrays so we get an array of (y, x) coordinates
         combined = np.column_stack(close_values)
 
         if combined.shape[0] == 0:
-            print("  Found no new starting point with the given tolerance")
+            print("  Found no new starting point with the given tolerance\n")
             continue
 
         distances = cdist(np.array([starting_coordinates]), combined)
@@ -306,8 +310,8 @@ def evolve_fill(images, begin, end, mask_starting_image, gray_at_starting_coordi
 
         gray_at_coordinates = selected_gray[new_coordinates]
 
-        print("  New starting coordinates: ({}, {}) | Value: {}".format(new_coordinates[1], new_coordinates[0],
-                                                                        gray_at_coordinates))
+        print("  New starting coordinates: ({}, {}) | Value: {}\n".format(new_coordinates[1], new_coordinates[0],
+                                                                          gray_at_coordinates))
 
         mask[image_number] = apply_flood_fill(selected_gray, new_coordinates, flood_fill_tolerance)
         selected_fill = mask[image_number]
@@ -333,7 +337,7 @@ def evolutive_flood_fill(images, flood_fill_tolerance, starting_coordinates,
     gray_at_starting_coordinates = images[image_number][starting_coordinates]
 
     print("Apply flood fill at coordinates: ({}, {})".format(starting_coordinates[1], starting_coordinates[0]))
-    print("Gray value for image {}: {}".format(image_number, gray_at_starting_coordinates))
+    print("Gray value for image {}: {}\n".format(image_number, gray_at_starting_coordinates))
 
     if image_number == 0:
         mask, result = evolve_fill(images, 1, len(images), mask_starting_image, gray_at_starting_coordinates,
