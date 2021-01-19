@@ -141,11 +141,8 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
     def update_flood_fill_tolerance(text):
         if globals.flood_fill_tolerance != float(text):
             globals.flood_fill_tolerance = float(text)
-            globals.images_drawn[index_mask][1], globals.images_drawn[index_result][1] = evolutive_flood_fill(
-                globals.median_images, globals.flood_fill_tolerance, globals.starting_coordinates)
-
-            globals.ls[index_mask].set_data(globals.images_drawn[index_mask][1][globals.current_image_slider])
-            globals.ls[index_result].set_data(globals.images_drawn[index_result][1][globals.current_image_slider])
+            apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image,
+                                      flood_fill_tolerance=globals.flood_fill_tolerance)
 
     def save_result(event):
         original_images = copy.deepcopy(globals.images)
@@ -207,20 +204,25 @@ def select_region(event):
         y = int(event.ydata)
 
         globals.starting_coordinates = (y, x)
-        apply_flood_fill_subplots(globals.starting_coordinates)
+        apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.current_image_slider)
         globals.fig.canvas.draw()
 
 
-def apply_flood_fill_subplots(coordinates):
+def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_tolerance=None):
     for k, l in enumerate(globals.ls):
         params = globals.images_drawn[k][2]
 
         if params['type'] == 'flood_fill':
-            tol = params['tolerance']
+            if flood_fill_tolerance is None:
+                tol = params['tolerance']
+            else:
+                tol = flood_fill_tolerance
+                params['tolerance'] = flood_fill_tolerance
 
             # Coordinates are height, width instead of width, height in numpy
             # We therefore apply the flood fill to the coordinates (y, x)
-            globals.images_drawn[k][1], globals.results = evolutive_flood_fill(globals.median_images, tol, coordinates)
+            globals.images_drawn[k][1], globals.results = evolutive_flood_fill(globals.median_images, tol, coordinates,
+                                                                               starting_image=starting_image)
             l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
         elif params['type'] == 'result':
             globals.images_drawn[k][1] = globals.results
@@ -325,6 +327,8 @@ def evolutive_flood_fill(images, flood_fill_tolerance, starting_coordinates,
                          starting_image=None):
     # Select image
     image_number = starting_image if starting_image is not None else globals.current_image_slider
+    globals.starting_image = image_number
+    globals.starting_coordinates = starting_coordinates
 
     # Select the image number from each set
     selected_gray = images[image_number]

@@ -60,7 +60,7 @@ for patient in ds.patient_records:
 
             mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
                                                 starting_image=16)
-            skeleton = resize_and_skeleton_3d(mask, 5)
+            skeleton = resize_and_skeleton_3d(mask, 1)
             original_images = copy.deepcopy(globals.images)
 
             for i, elem in enumerate(skeleton):
