@@ -1,6 +1,3 @@
-import cv2
-import skimage.morphology
-
 from helpers import *
 
 dataset_path = "ImgTP/Ge1CaroG/MR_3DPCA"
@@ -60,22 +57,9 @@ for patient in ds.patient_records:
 
             mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
                                                 starting_image=16)
-            skeleton = resize_and_skeleton_3d(mask, 1)
+            globals.skeleton_factor = 5
+            skeleton = resize_and_skeleton_3d(mask, globals.skeleton_factor)
             original_images = copy.deepcopy(globals.images)
-
-            for i, elem in enumerate(skeleton):
-                image_elem, p = original_images[i]
-                filename = p.name
-                study_folder = p.parent.parent
-
-                image_elem.PixelData = skeleton[i].astype('uint16').tobytes()
-                image_elem.Rows, image_elem.Columns = skeleton[0].shape
-
-                result_folder = Path(globals.dataset_path).joinpath(study_folder).joinpath('skeleton')
-                result_folder.mkdir(parents=True, exist_ok=True)
-
-                filepath = result_folder.joinpath(filename)
-                image_elem.save_as(filepath)
 
             subplots_slider(
                 [['Original', [image.pixel_array for image, _ in images], {'type': 'original'}],

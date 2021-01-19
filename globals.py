@@ -10,3 +10,4 @@ starting_coordinates = (0, 0)
 flood_fill_tolerance = 0.2
 dataset_path = None
 starting_image = 0
+skeleton_factor = 1

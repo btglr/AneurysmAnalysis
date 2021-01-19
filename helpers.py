@@ -123,10 +123,12 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
                           valfmt="%i")
     flood_fill_textbox = TextBox(ax_flood_fill_textbox, 'Flood Fill Tolerance',
                                  initial=str(globals.flood_fill_tolerance))
-    save_button = Button(ax_save_button, 'Save current mask', color='0.85', hovercolor='0.95')
+    save_button = Button(ax_save_button, 'Save mask and skeleton', color='0.85', hovercolor='0.95')
 
     result_element = [image_set for image_set in globals.images_drawn if image_set[0] == 'Result'][0]
+    skeleton_element = [image_set for image_set in globals.images_drawn if image_set[0] == 'Skeleton'][0]
     index_result = globals.images_drawn.index(result_element)
+    index_skeleton = globals.images_drawn.index(skeleton_element)
 
     def update(val):
         val = int(val)
@@ -155,6 +157,15 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
             result_folder.mkdir(parents=True, exist_ok=True)
 
             filepath = result_folder.joinpath(filename)
+            image_elem.save_as(filepath)
+
+            image_elem.PixelData = globals.images_drawn[index_skeleton][1][i].astype('uint16').tobytes()
+            image_elem.Rows, image_elem.Columns = globals.images_drawn[index_skeleton][1][0].shape
+
+            skeleton_folder = Path(globals.dataset_path).joinpath(study_folder).joinpath('skeleton')
+            skeleton_folder.mkdir(parents=True, exist_ok=True)
+
+            filepath = skeleton_folder.joinpath(filename)
             image_elem.save_as(filepath)
 
     image_slider.on_changed(update)
@@ -223,6 +234,10 @@ def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_toler
             l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
         elif params['type'] == 'result':
             globals.images_drawn[k][1] = globals.results
+            l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
+        elif params['type'] == 'skeleton':
+            mask = [image_set for image_set in globals.images_drawn if image_set[0] == 'Mask'][0]
+            globals.images_drawn[k][1] = resize_and_skeleton_3d(mask[1], globals.skeleton_factor)
             l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
 
 
