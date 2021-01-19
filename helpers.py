@@ -125,10 +125,7 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
                                  initial=str(globals.flood_fill_tolerance))
     save_button = Button(ax_save_button, 'Save current mask', color='0.85', hovercolor='0.95')
 
-    mask_element = [mask_element for mask_element in globals.images_drawn if 'Mask' in mask_element][0]
-    result_element = [result_element for result_element in globals.images_drawn if 'Result' in result_element][0]
-
-    index_mask = globals.images_drawn.index(mask_element)
+    result_element = [image_set for image_set in globals.images_drawn if image_set[0] == 'Result'][0]
     index_result = globals.images_drawn.index(result_element)
 
     def update(val):
