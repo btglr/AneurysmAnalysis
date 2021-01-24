@@ -1,9 +1,10 @@
 import copy
 from pathlib import Path
 
-import cv2 as cv
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import skimage
 from matplotlib.widgets import Slider, TextBox, Button
 from pydicom import dcmread
 from scipy import ndimage
@@ -399,8 +400,15 @@ def evolutive_flood_fill(images, flood_fill_tolerance, starting_coordinates,
     return mask, result
 
 
-def resize_and_skeleton_3d(mask, factor):
+def resize_and_skeleton_3d(mask, factor, dilation_kernel=None):
     height, width = mask[0].shape
     dsize = (width * factor, height * factor)
-    new_mask = [cv.resize(image_mask, dsize) for image_mask in mask]
-    return skeletonize_3d(np.array(new_mask))
+    new_mask = [cv2.resize(image_mask, dsize, cv2.INTER_NEAREST) for image_mask in mask]
+
+    skeletonized_mask = np.array([skeleton / 255 for skeleton in skeletonize_3d(np.array(new_mask))]).astype('uint8')
+
+    if dilation_kernel is not None:
+        skeletonized_mask = [skimage.morphology.binary_dilation(skeleton, dilation_kernel) for skeleton in
+                             skeletonized_mask]
+
+    return np.array(skeletonized_mask).astype('uint16') * globals.max_gray_value

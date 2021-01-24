@@ -12,3 +12,4 @@ seed_tolerance = 0.05
 dataset_path = None
 starting_image = 0
 skeleton_factor = 1
+max_gray_value = 1

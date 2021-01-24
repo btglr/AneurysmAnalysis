@@ -54,10 +54,11 @@ for patient in ds.patient_records:
             globals.images = copy.deepcopy(images)
             globals.median_images = denoised_images
             globals.flood_fill_tolerance = 0.31
+            globals.max_gray_value = np.max(globals.median_images)
 
             mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
                                                 starting_image=16)
-            skeleton = resize_and_skeleton_3d(mask, globals.skeleton_factor)
+            skeleton = resize_and_skeleton_3d(mask, globals.skeleton_factor, np.ones((2, 2), np.uint8))
             original_images = copy.deepcopy(globals.images)
 
             subplots_slider(
