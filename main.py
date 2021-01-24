@@ -25,16 +25,19 @@ for patient in ds.patient_records:
             images = []
             denoised_images = []
 
+            ConstPixelSpacing = []
             i = 0
             # List the instance file paths
             for p in paths:
                 img = dcmread(Path(dataset_path).joinpath(p))
                 images.append((img, p))
-
+                if i == 0:
+                    ConstPixelSpacing = (float(img.PixelSpacing[0]), float(img.PixelSpacing[1]), float(img.SliceThickness))
                 i += 1
                 if i == 48:
                     break
 
+            print(ConstPixelSpacing)
             for image, p in images:
                 median = apply_simple_denoise(image, kernel_size=3)
 
