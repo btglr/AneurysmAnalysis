@@ -207,7 +207,9 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
     seed_tolerance_textbox.on_submit(update_seed_tolerance)
     resize_factor_textbox.on_submit(update_resize_factor)
     save_button.on_clicked(save_result)
-    recalculate_button.on_clicked(recalculate_segmentation)
+
+    # TODO: Disabled for now
+    # recalculate_button.on_clicked(recalculate_segmentation)
     reset_button.on_clicked(reset_segmentations)
     # fig.subplots_adjust(wspace=0, hspace=0)
 
@@ -254,7 +256,76 @@ def select_region(event):
         globals.fig.canvas.draw()
 
 
-def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_tolerance=None, segmentation_index=-1):
+def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_tolerance=None, segmentation_index=-1,
+                              seed_tolerance=None):
+    for index, image_set in enumerate(globals.ls):
+        params = globals.images_drawn[index][2]
+
+        if params['type'] == 'flood_fill':
+            if flood_fill_tolerance is None:
+                flood_fill_tolerance = globals.flood_fill_tolerance
+
+            if seed_tolerance is None:
+                seed_tolerance = globals.seed_tolerance
+
+            params['flood_fill_tolerance'] = flood_fill_tolerance
+            params['seed_tolerance'] = seed_tolerance
+
+            # Coordinates are height, width instead of width, height in numpy
+            # We therefore apply the flood fill to the coordinates (y, x)
+            tmp_masks, tmp_results = evolutive_flood_fill(globals.median_images, flood_fill_tolerance,
+                                                          coordinates,
+                                                          starting_image=starting_image)
+
+            if segmentation_index != -1:
+                globals.segmentations_masks[segmentation_index] = (tmp_masks, params)
+                globals.segmentations_results[segmentation_index] = (tmp_results, params)
+            else:
+                globals.segmentations_masks.append([tmp_masks, params, 'Active'])
+                globals.segmentations_results.append([tmp_results, params, 'Active'])
+                segmentation_index = len(globals.segmentations_masks) - 1
+
+            active_segmentations = [segmentation for segmentation in globals.segmentations_masks if
+                                    segmentation[2] == 'Active']
+            local_index = len(active_segmentations) - 1
+
+            print(f'Added segmentation {segmentation_index}')
+
+            ax_delete_button = plt.axes([0.10, 0.65 - (local_index * 0.05), 0.01, 0.04],
+                                        label=f'Delete {segmentation_index}')
+
+            seg_text = plt.text(0.003, 0.659 - (local_index * 0.05),
+                                "Seg: {}, Flood: {}, Seed: {}".format(segmentation_index,
+                                                                      params['flood_fill_tolerance'],
+                                                                      params['seed_tolerance']),
+                                transform=plt.gcf().transFigure)
+
+            delete_button = Button(ax_delete_button, 'X', color='0.85', hovercolor='red')
+            segmentation_index_copy = segmentation_index
+            current_axis = plt.gca()
+
+            def delete_segmentation(_):
+                print(f'Removing segmentation {segmentation_index_copy}')
+
+                delete_button.active = False
+
+                del current_axis.texts[0]
+                ax_delete_button.remove()
+
+                globals.segmentations_masks[segmentation_index_copy][2] = 'Inactive'
+                globals.segmentations_results[segmentation_index_copy][2] = 'Inactive'
+
+                redraw_segmentations()
+                plt.draw()
+
+            delete_button.on_clicked(delete_segmentation)
+
+            globals.list_segmentations.append([ax_delete_button, delete_button, seg_text])
+
+    redraw_segmentations()
+
+
+def redraw_segmentations():
     def merge_arrays(a, b):
         result = a.copy()
         zero_indexes = (a == 0)
@@ -266,45 +337,47 @@ def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_toler
         params = globals.images_drawn[index][2]
 
         if params['type'] == 'flood_fill':
-            if flood_fill_tolerance is None:
-                tol = params['tolerance']
-            else:
-                tol = flood_fill_tolerance
-                params['tolerance'] = flood_fill_tolerance
+            active_segmentations = [segmentation for segmentation in globals.segmentations_masks if
+                                    segmentation[2] == 'Active']
 
-            # Coordinates are height, width instead of width, height in numpy
-            # We therefore apply the flood fill to the coordinates (y, x)
-            tmp_masks, tmp_results = evolutive_flood_fill(globals.median_images, tol,
-                                                          coordinates,
-                                                          starting_image=starting_image)
-
-            if segmentation_index != -1:
-                globals.segmentations_masks[segmentation_index] = (tmp_masks, params)
-                globals.segmentations_results[segmentation_index] = (tmp_results, params)
-            else:
-                globals.segmentations_masks.append((tmp_masks, params))
-                globals.segmentations_results.append((tmp_results, params))
+            if len(active_segmentations) == 0:
+                globals.images_drawn[index][1] = [np.zeros(
+                    globals.images_drawn[index][1][0].shape)] * len(
+                    globals.images_drawn[index][1])
+                globals.results = [np.zeros(globals.images_drawn[index][1][0].shape)] * len(
+                    globals.images_drawn[index][1])
 
             globals.images_drawn[index][1] = None
             globals.results = None
 
             for segmentation_masks_tuple, segmentation_results_tuple in zip(globals.segmentations_masks,
                                                                             globals.segmentations_results):
-                segmentation_masks, segmentation_results = segmentation_masks_tuple[0], segmentation_results_tuple[0]
 
-                if globals.images_drawn[index][1] is None and globals.results is None:
-                    globals.images_drawn[index][1] = segmentation_masks
-                    globals.results = segmentation_results
-                else:
-                    globals.images_drawn[index][1] = [merge_arrays(drawn, new) for drawn, new in
-                                                      zip(globals.images_drawn[index][1], segmentation_masks)]
-                    globals.results = [merge_arrays(drawn, new) for drawn, new in
-                                       zip(globals.results, segmentation_results)]
+                if segmentation_masks_tuple[2] == 'Active':
+                    segmentation_masks, segmentation_results = segmentation_masks_tuple[0], segmentation_results_tuple[
+                        0]
+
+                    if globals.images_drawn[index][1] is None and globals.results is None:
+                        globals.images_drawn[index][1] = segmentation_masks
+                        globals.results = segmentation_results
+                    else:
+                        globals.images_drawn[index][1] = [merge_arrays(drawn, new) for drawn, new in
+                                                          zip(globals.images_drawn[index][1],
+                                                              segmentation_masks)]
+                        globals.results = [merge_arrays(drawn, new) for drawn, new in
+                                           zip(globals.results, segmentation_results)]
+
+            # If None, there are no images so we set a blank image
+            if globals.images_drawn[index][1] is None:
+                globals.images_drawn[index][1] = [np.zeros(globals.median_images[0].shape)] * len(globals.median_images)
+                globals.results = [np.zeros(globals.median_images[0].shape)] * len(globals.median_images)
 
             image_set.set_data(globals.images_drawn[index][1][globals.current_image_slider])
+
         elif params['type'] == 'result':
             globals.images_drawn[index][1] = globals.results
             image_set.set_data(globals.images_drawn[index][1][globals.current_image_slider])
+
         elif params['type'] == 'skeleton':
             mask = [image_set for image_set in globals.images_drawn if image_set[0] == 'Mask'][0]
             globals.images_drawn[index][1] = resize_and_skeleton_3d(mask[1], globals.skeleton_factor)

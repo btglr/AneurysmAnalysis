@@ -15,3 +15,4 @@ skeleton_factor = 1
 max_gray_value = 1
 segmentations_masks = []
 segmentations_results = []
+list_segmentations = []
