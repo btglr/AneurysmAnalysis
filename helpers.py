@@ -121,7 +121,8 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
     ax_flood_fill_tolerance_textbox = plt.axes([0.06, 0.95, 0.05, 0.04])
     ax_seed_tolerance_textbox = plt.axes([0.06, 0.90, 0.05, 0.04])
     ax_resize_factor_textbox = plt.axes([0.06, 0.85, 0.05, 0.04])
-    ax_save_button = plt.axes([0.01, 0.80, 0.10, 0.04])
+    ax_recalculate_button = plt.axes([0.01, 0.80, 0.10, 0.04])
+    ax_save_button = plt.axes([0.01, 0.75, 0.10, 0.04])
     image_slider = Slider(ax_image_slider, 'Image', 0, len(globals.images_drawn[0][1]) - 1, valinit=0, valstep=1,
                           valfmt="%i")
     flood_fill_tolerance_textbox = TextBox(ax_flood_fill_tolerance_textbox, 'Flood Fill Tolerance',
@@ -130,6 +131,7 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
                                      initial=str(globals.seed_tolerance))
     resize_factor_textbox = TextBox(ax_resize_factor_textbox, 'Resize Skel. Factor',
                                     initial=str(globals.skeleton_factor))
+    recalculate_button = Button(ax_recalculate_button, 'Recalculate segmentation', color='0.85', hovercolor='0.95')
     save_button = Button(ax_save_button, 'Save mask and skeleton', color='0.85', hovercolor='0.95')
 
     result_element = [image_set for image_set in globals.images_drawn if image_set[0] == 'Result'][0]
@@ -147,20 +149,14 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
     def update_flood_fill_tolerance(text):
         if globals.flood_fill_tolerance != float(text):
             globals.flood_fill_tolerance = float(text)
-            apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image,
-                                      flood_fill_tolerance=globals.flood_fill_tolerance)
 
     def update_seed_tolerance(text):
         if globals.seed_tolerance != float(text):
             globals.seed_tolerance = float(text)
-            apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image,
-                                      flood_fill_tolerance=globals.flood_fill_tolerance)
 
     def update_resize_factor(text):
         if globals.skeleton_factor != int(text):
             globals.skeleton_factor = int(text)
-            apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image,
-                                      flood_fill_tolerance=globals.flood_fill_tolerance)
 
     def save_result(event):
         original_images = copy.deepcopy(globals.images)
@@ -187,11 +183,16 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
             filepath = skeleton_folder.joinpath(filename)
             image_elem.save_as(filepath)
 
+    def recalculate_segmentation(event):
+        apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image,
+                                  flood_fill_tolerance=globals.flood_fill_tolerance)
+
     image_slider.on_changed(update)
     flood_fill_tolerance_textbox.on_submit(update_flood_fill_tolerance)
     seed_tolerance_textbox.on_submit(update_seed_tolerance)
     resize_factor_textbox.on_submit(update_resize_factor)
     save_button.on_clicked(save_result)
+    recalculate_button.on_clicked(recalculate_segmentation)
     # fig.subplots_adjust(wspace=0, hspace=0)
 
     if click_handler is not None:
@@ -237,7 +238,7 @@ def select_region(event):
         globals.fig.canvas.draw()
 
 
-def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_tolerance=None):
+def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_tolerance=None, segmentation_index=-1):
     def merge_arrays(a, b):
         result = a.copy()
         zero_indexes = (a == 0)
@@ -261,10 +262,28 @@ def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_toler
                                                           coordinates,
                                                           starting_image=starting_image)
 
-            globals.images_drawn[index][1] = [merge_arrays(drawn, new) for drawn, new in
-                                              zip(globals.images_drawn[index][1], tmp_masks)]
-            globals.results = [merge_arrays(drawn, new) for drawn, new in
-                               zip(globals.results, tmp_results)]
+            if segmentation_index != -1:
+                globals.segmentations_masks[segmentation_index] = (tmp_masks, params)
+                globals.segmentations_results[segmentation_index] = (tmp_results, params)
+            else:
+                globals.segmentations_masks.append((tmp_masks, params))
+                globals.segmentations_results.append((tmp_results, params))
+
+            globals.images_drawn[index][1] = None
+            globals.results = None
+
+            for segmentation_masks_tuple, segmentation_results_tuple in zip(globals.segmentations_masks,
+                                                                            globals.segmentations_results):
+                segmentation_masks, segmentation_results = segmentation_masks_tuple[0], segmentation_results_tuple[0]
+
+                if globals.images_drawn[index][1] is None and globals.results is None:
+                    globals.images_drawn[index][1] = segmentation_masks
+                    globals.results = segmentation_results
+                else:
+                    globals.images_drawn[index][1] = [merge_arrays(drawn, new) for drawn, new in
+                                                      zip(globals.images_drawn[index][1], segmentation_masks)]
+                    globals.results = [merge_arrays(drawn, new) for drawn, new in
+                                       zip(globals.results, segmentation_results)]
 
             image_set.set_data(globals.images_drawn[index][1][globals.current_image_slider])
         elif params['type'] == 'result':

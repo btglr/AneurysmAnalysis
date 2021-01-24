@@ -56,15 +56,19 @@ for patient in ds.patient_records:
             globals.flood_fill_tolerance = 0.25
             globals.max_gray_value = np.max(globals.median_images)
 
-            mask, globals.results = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
-                                                         starting_image=16)
-            skeleton = resize_and_skeleton_3d(mask, globals.skeleton_factor, np.ones((2, 2), np.uint8))
+            masks, results = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
+                                                  starting_image=16)
+            skeleton = resize_and_skeleton_3d(masks, globals.skeleton_factor, np.ones((2, 2), np.uint8))
             original_images = copy.deepcopy(globals.images)
+
+            globals.segmentations_masks.append(
+                (masks, {'type': 'flood_fill', 'tolerance': globals.flood_fill_tolerance}))
+            globals.segmentations_results.append((results, {'type': 'result'}))
 
             subplots_slider(
                 [['Original', [image.pixel_array for image, _ in images], {'type': 'original'}],
                  ['Median Filter', denoised_images, {'type': 'median_filter'}],
-                 ['Mask', mask, {'type': 'flood_fill', 'tolerance': globals.flood_fill_tolerance}],
-                 ['Result', globals.results, {'type': 'result'}],
+                 ['Mask', masks, {'type': 'flood_fill', 'tolerance': globals.flood_fill_tolerance}],
+                 ['Result', results, {'type': 'result'}],
                  ['Skeleton', skeleton, {'type': 'skeleton'}]],
                 click_handler=select_region, zoom=3)
