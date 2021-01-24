@@ -53,7 +53,7 @@ for patient in ds.patient_records:
 
             globals.images = copy.deepcopy(images)
             globals.median_images = denoised_images
-            globals.flood_fill_tolerance = 0.31
+            globals.flood_fill_tolerance = 0.25
             globals.max_gray_value = np.max(globals.median_images)
 
             mask, result = evolutive_flood_fill(denoised_images, globals.flood_fill_tolerance, (76, 70),
