@@ -187,8 +187,12 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
             image_elem.save_as(filepath)
 
     def recalculate_segmentation(event):
-        apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image,
-                                  flood_fill_tolerance=globals.flood_fill_tolerance)
+        if globals.selected_segmentation != -1:
+            apply_flood_fill_subplots(globals.list_segmentations[globals.selected_segmentation][1],
+                                      starting_image=globals.list_segmentations[globals.selected_segmentation][0],
+                                      segmentation_index=globals.selected_segmentation)
+        else:
+            apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image)
 
     def reset_segmentations(_):
         globals.segmentations_masks.clear()
@@ -208,8 +212,7 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
     resize_factor_textbox.on_submit(update_resize_factor)
     save_button.on_clicked(save_result)
 
-    # TODO: Disabled for now
-    # recalculate_button.on_clicked(recalculate_segmentation)
+    recalculate_button.on_clicked(recalculate_segmentation)
     reset_button.on_clicked(reset_segmentations)
     # fig.subplots_adjust(wspace=0, hspace=0)
 
@@ -258,6 +261,8 @@ def select_region(event):
 
 def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_tolerance=None, segmentation_index=-1,
                               seed_tolerance=None):
+    changing_segmentation = False
+
     for index, image_set in enumerate(globals.ls):
         params = globals.images_drawn[index][2]
 
@@ -278,8 +283,9 @@ def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_toler
                                                           starting_image=starting_image)
 
             if segmentation_index != -1:
-                globals.segmentations_masks[segmentation_index] = (tmp_masks, params)
-                globals.segmentations_results[segmentation_index] = (tmp_results, params)
+                globals.segmentations_masks[segmentation_index] = (tmp_masks, params, 'Active')
+                globals.segmentations_results[segmentation_index] = (tmp_results, params, 'Active')
+                changing_segmentation = True
             else:
                 globals.segmentations_masks.append([tmp_masks, params, 'Active'])
                 globals.segmentations_results.append([tmp_results, params, 'Active'])
@@ -289,38 +295,53 @@ def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_toler
                                     segmentation[2] == 'Active']
             local_index = len(active_segmentations) - 1
 
-            print(f'Added segmentation {segmentation_index}')
+            if changing_segmentation:
+                print(f'Changed segmentation {segmentation_index}')
+            else:
+                print(f'Added segmentation {segmentation_index}')
 
-            ax_delete_button = plt.axes([0.10, 0.65 - (local_index * 0.05), 0.01, 0.04],
-                                        label=f'Delete {segmentation_index}')
+                ax_delete_button = plt.axes([0.10, 0.65 - (local_index * 0.06), 0.01, 0.04],
+                                            label=f'Delete {segmentation_index}')
+                ax_select_button = plt.axes([0.085, 0.65 - (local_index * 0.06), 0.01, 0.04],
+                                            label=f'Select {segmentation_index}')
 
-            seg_text = plt.text(0.003, 0.659 - (local_index * 0.05),
-                                "Seg: {}, Flood: {}, Seed: {}".format(segmentation_index,
-                                                                      params['flood_fill_tolerance'],
-                                                                      params['seed_tolerance']),
-                                transform=plt.gcf().transFigure)
+                seg_text = plt.text(0.003, 0.646 - (local_index * 0.06),
+                                    "Seg: {}, Coords: {}\nFlood: {}, Seed: {}".format(segmentation_index,
+                                                                                      coordinates,
+                                                                                      params['flood_fill_tolerance'],
+                                                                                      params['seed_tolerance']),
+                                    transform=plt.gcf().transFigure)
 
-            delete_button = Button(ax_delete_button, 'X', color='0.85', hovercolor='red')
-            segmentation_index_copy = segmentation_index
-            current_axis = plt.gca()
+                delete_button = Button(ax_delete_button, 'X', color='0.85', hovercolor='red')
+                select_button = Button(ax_select_button, 'S', color='0.85', hovercolor='0.95')
+                segmentation_index_copy = segmentation_index
+                current_axis = plt.gca()
 
-            def delete_segmentation(_):
-                print(f'Removing segmentation {segmentation_index_copy}')
+                def delete_segmentation(_):
+                    print(f'Removing segmentation {segmentation_index_copy}')
 
-                delete_button.active = False
+                    delete_button.active = False
+                    select_button.active = False
 
-                del current_axis.texts[0]
-                ax_delete_button.remove()
+                    del current_axis.texts[0]
+                    ax_delete_button.remove()
+                    ax_select_button.remove()
 
-                globals.segmentations_masks[segmentation_index_copy][2] = 'Inactive'
-                globals.segmentations_results[segmentation_index_copy][2] = 'Inactive'
+                    globals.segmentations_masks[segmentation_index_copy][2] = 'Inactive'
+                    globals.segmentations_results[segmentation_index_copy][2] = 'Inactive'
 
-                redraw_segmentations()
-                plt.draw()
+                    redraw_segmentations()
+                    plt.draw()
 
-            delete_button.on_clicked(delete_segmentation)
+                def select_segmentation(_):
+                    print(f'Selected segmentation {segmentation_index_copy}')
+                    globals.selected_segmentation = segmentation_index_copy
 
-            globals.list_segmentations.append([ax_delete_button, delete_button, seg_text])
+                delete_button.on_clicked(delete_segmentation)
+                select_button.on_clicked(select_segmentation)
+
+                globals.list_segmentations.append(
+                    [starting_image, coordinates, ax_delete_button, delete_button, select_button, seg_text])
 
     redraw_segmentations()
 
