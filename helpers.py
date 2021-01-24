@@ -283,8 +283,8 @@ def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_toler
                                                           starting_image=starting_image)
 
             if segmentation_index != -1:
-                globals.segmentations_masks[segmentation_index] = (tmp_masks, params, 'Active')
-                globals.segmentations_results[segmentation_index] = (tmp_results, params, 'Active')
+                globals.segmentations_masks[segmentation_index] = [tmp_masks, params, 'Active']
+                globals.segmentations_results[segmentation_index] = [tmp_results, params, 'Active']
                 changing_segmentation = True
             else:
                 globals.segmentations_masks.append([tmp_masks, params, 'Active'])
