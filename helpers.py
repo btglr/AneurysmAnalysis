@@ -238,8 +238,15 @@ def select_region(event):
 
 
 def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_tolerance=None):
-    for k, l in enumerate(globals.ls):
-        params = globals.images_drawn[k][2]
+    def merge_arrays(a, b):
+        result = a.copy()
+        zero_indexes = (a == 0)
+        result[zero_indexes] = b[zero_indexes]
+
+        return result
+
+    for index, image_set in enumerate(globals.ls):
+        params = globals.images_drawn[index][2]
 
         if params['type'] == 'flood_fill':
             if flood_fill_tolerance is None:
@@ -250,16 +257,23 @@ def apply_flood_fill_subplots(coordinates, starting_image=None, flood_fill_toler
 
             # Coordinates are height, width instead of width, height in numpy
             # We therefore apply the flood fill to the coordinates (y, x)
-            globals.images_drawn[k][1], globals.results = evolutive_flood_fill(globals.median_images, tol, coordinates,
-                                                                               starting_image=starting_image)
-            l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
+            tmp_masks, tmp_results = evolutive_flood_fill(globals.median_images, tol,
+                                                          coordinates,
+                                                          starting_image=starting_image)
+
+            globals.images_drawn[index][1] = [merge_arrays(drawn, new) for drawn, new in
+                                              zip(globals.images_drawn[index][1], tmp_masks)]
+            globals.results = [merge_arrays(drawn, new) for drawn, new in
+                               zip(globals.results, tmp_results)]
+
+            image_set.set_data(globals.images_drawn[index][1][globals.current_image_slider])
         elif params['type'] == 'result':
-            globals.images_drawn[k][1] = globals.results
-            l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
+            globals.images_drawn[index][1] = globals.results
+            image_set.set_data(globals.images_drawn[index][1][globals.current_image_slider])
         elif params['type'] == 'skeleton':
             mask = [image_set for image_set in globals.images_drawn if image_set[0] == 'Mask'][0]
-            globals.images_drawn[k][1] = resize_and_skeleton_3d(mask[1], globals.skeleton_factor)
-            l.set_data(globals.images_drawn[k][1][globals.current_image_slider])
+            globals.images_drawn[index][1] = resize_and_skeleton_3d(mask[1], globals.skeleton_factor)
+            image_set.set_data(globals.images_drawn[index][1][globals.current_image_slider])
 
 
 def apply_random_walker(image):
