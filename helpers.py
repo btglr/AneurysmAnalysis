@@ -123,6 +123,8 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
     ax_resize_factor_textbox = plt.axes([0.06, 0.85, 0.05, 0.04])
     ax_recalculate_button = plt.axes([0.01, 0.80, 0.10, 0.04])
     ax_save_button = plt.axes([0.01, 0.75, 0.10, 0.04])
+    ax_reset_button = plt.axes([0.01, 0.01, 0.10, 0.04])
+
     image_slider = Slider(ax_image_slider, 'Image', 0, len(globals.images_drawn[0][1]) - 1, valinit=0, valstep=1,
                           valfmt="%i")
     flood_fill_tolerance_textbox = TextBox(ax_flood_fill_tolerance_textbox, 'Flood Fill Tolerance',
@@ -133,6 +135,7 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
                                     initial=str(globals.skeleton_factor))
     recalculate_button = Button(ax_recalculate_button, 'Recalculate segmentation', color='0.85', hovercolor='0.95')
     save_button = Button(ax_save_button, 'Save mask and skeleton', color='0.85', hovercolor='0.95')
+    reset_button = Button(ax_reset_button, 'Reset segmentations', color='0.85', hovercolor='red')
 
     result_element = [image_set for image_set in globals.images_drawn if image_set[0] == 'Result'][0]
     skeleton_element = [image_set for image_set in globals.images_drawn if image_set[0] == 'Skeleton'][0]
@@ -187,12 +190,25 @@ def subplots_slider(images, zoom=2.0, click_handler=None):
         apply_flood_fill_subplots(globals.starting_coordinates, starting_image=globals.starting_image,
                                   flood_fill_tolerance=globals.flood_fill_tolerance)
 
+    def reset_segmentations(_):
+        globals.segmentations_masks.clear()
+        globals.segmentations_results.clear()
+
+        for index, image_set in enumerate(globals.ls):
+            params = globals.images_drawn[index][2]
+
+            if params['type'] == 'flood_fill' or params['type'] == 'result' or params['type'] == 'skeleton':
+                globals.images_drawn[index][1] = [np.zeros(globals.images_drawn[index][1][0].shape)] * len(
+                    globals.images_drawn[index][1])
+                image_set.set_data(globals.images_drawn[index][1][globals.current_image_slider])
+
     image_slider.on_changed(update)
     flood_fill_tolerance_textbox.on_submit(update_flood_fill_tolerance)
     seed_tolerance_textbox.on_submit(update_seed_tolerance)
     resize_factor_textbox.on_submit(update_resize_factor)
     save_button.on_clicked(save_result)
     recalculate_button.on_clicked(recalculate_segmentation)
+    reset_button.on_clicked(reset_segmentations)
     # fig.subplots_adjust(wspace=0, hspace=0)
 
     if click_handler is not None:
