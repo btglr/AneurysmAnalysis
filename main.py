@@ -32,7 +32,8 @@ for patient in ds.patient_records:
                 img = dcmread(Path(dataset_path).joinpath(p))
                 images.append((img, p))
                 if i == 0:
-                    ConstPixelSpacing = (float(img.PixelSpacing[0]), float(img.PixelSpacing[1]), float(img.SliceThickness))
+                    ConstPixelSpacing = (
+                        float(img.PixelSpacing[0]), float(img.PixelSpacing[1]), float(img.SliceThickness))
                 i += 1
                 if i == 48:
                     break
